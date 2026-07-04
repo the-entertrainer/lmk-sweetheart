@@ -1,10 +1,19 @@
 import { getProject } from '@theatre/core';
 import {
-  LYRICS, buildTimeline, TOTAL_DURATION, GAP_ASSETS, COLLAGE_ASSETS,
-  HERO_WINDOWS, assetPath, moodAt,
+  LYRICS, buildTimeline, TOTAL_DURATION, PHOTO_LAYERS, DOODLE_LAYERS,
+  DEPTH_TIERS, assetPath, moodAt,
 } from './lyrics-data.mjs';
 import { initScene, IS_MOBILE } from './scene/scene3d.js';
+import { createPhotoSprite, aspectOf } from './scene/photoLayers.js';
 import './style.css';
+
+import heartSvg from './doodles/heart.svg?raw';
+import sparkleSvg from './doodles/sparkle.svg?raw';
+import sparklesSvg from './doodles/sparkles.svg?raw';
+import starSvg from './doodles/star.svg?raw';
+import xSvg from './doodles/x.svg?raw';
+
+const DOODLE_ICONS = { heart: heartSvg, sparkle: sparkleSvg, sparkles: sparklesSvg, star: starSvg, x: xSvg };
 
 const audio = document.getElementById('track');
 const stack = document.getElementById('stack');
@@ -19,17 +28,15 @@ const root = document.documentElement;
 
 introVinyl.innerHTML = '<div class="vinyl-disc"></div>';
 
-// Finale flourish — the handful of illustrations that don't belong to any
-// specific lyric get their one moment here, scattered loosely around the
-// closing message instead of sitting unused.
+// Finale flourish — a couple of the photo cutouts get one last still moment
+// scattered around the closing message.
 [
-  { asset:'two-hearts.png', top:'12%', left:'8%' },
-  { asset:'ribbon.png', top:'18%', left:'auto', right:'10%' },
-  { asset:'sparkles.png', top:'70%', left:'12%' },
-  { asset:'love-letter.png', top:'68%', left:'auto', right:'9%' },
+  { asset:'rose.png', top:'14%', left:'8%' },
+  { asset:'ring.png', top:'20%', left:'auto', right:'10%' },
+  { asset:'pearl-necklace.png', top:'68%', left:'10%' },
 ].forEach(cue => {
   const wrap = document.createElement('div');
-  wrap.className = 'asset-wrap';
+  wrap.className = 'finale-photo';
   wrap.style.top = cue.top;
   wrap.style.left = cue.left ?? 'auto';
   if (cue.right) wrap.style.right = cue.right;
@@ -42,56 +49,69 @@ const scene = initScene(sceneCanvas);
 
 /**
  * Line slots are centered (left:50%) so they need translate(-50%,-50%) to
- * stay anchored; asset/collage wraps live directly under #stage and are
- * already edge-anchored horizontally (left/right clamp), so only their
- * vertical centering should come from the transform, or Theatre's own x/y
- * would double-offset them.
+ * stay anchored.
  */
-function applyTransform(el, v, { centerX = true } = {}){
+function applyLineTransform(el, v){
   if (!v) return;
   const x = v.x || 0, y = v.y || 0, scale = v.scale ?? 1, rotate = v.rotate || 0;
-  const tx = centerX ? `calc(-50% + ${x}px)` : `${x}px`;
-  el.style.transform = `translate(${tx}, calc(-50% + ${y}px)) scale(${scale}) rotate(${rotate}deg)`;
+  el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale}) rotate(${rotate}deg)`;
   el.style.opacity = v.opacity ?? 1;
   if (v.blur !== undefined) el.style.filter = v.blur > 0.05 ? `blur(${v.blur}px)` : 'none';
-  if (v.weight !== undefined) el.style.fontVariationSettings = `'opsz' ${IS_MOBILE ? 38 : 90}, 'wght' ${Math.round(v.weight)}`;
+  if (v.weight !== undefined) el.style.fontVariationSettings = `'wght' ${Math.round(v.weight)}`;
 }
 
-function buildAssetWrap(cue, { topPercent, tier = 'accent' }){
+/** Fixed on-screen anchor (never under the centered text column) + a
+ * Theatre-driven opacity/scale/rotate for a doodle DOM element. */
+function buildDoodle(d, idx){
   const wrap = document.createElement('div');
-  wrap.className = `asset-wrap side-${cue.side}${tier === 'ambient' ? ' tier-ambient' : ''}`;
-  wrap.style.top = topPercent + '%';
-  wrap.innerHTML = `<img src="${assetPath(cue.asset)}" alt="" loading="lazy">`;
+  wrap.className = 'doodle';
+  wrap.innerHTML = DOODLE_ICONS[d.icon] || '';
+  const side = idx % 2 === 0 ? 'left' : 'right';
+  wrap.style[side] = (6 + (idx % 3) * 6) + '%';
+  wrap.style.top = (16 + ((idx * 53) % 62)) + '%';
   stageEl.appendChild(wrap);
   return wrap;
 }
+function applyDoodleTransform(el, v){
+  if (!v) return;
+  el.style.opacity = v.opacity ?? 0;
+  el.style.transform = `scale(${v.scale ?? 1}) rotate(${v.rotate || 0}deg)`;
+}
 
-function buildCollageWrap(cue, topPercent){
-  const wrap = document.createElement('div');
-  wrap.className = `collage-wrap side-${cue.side}`;
-  wrap.style.top = topPercent + '%';
-  wrap.style.left = cue.side === 'left' ? '-2%' : 'auto';
-  wrap.style.right = cue.side === 'right' ? '-2%' : 'auto';
-  wrap.innerHTML = `<img src="${assetPath(cue.asset)}" alt="" loading="lazy">`;
-  stageEl.appendChild(wrap);
-  return wrap;
+/** Converts a photo layer's authored frustum-fraction x/y + depth-tier
+ * screenFrac into a real world-space sprite position/scale, using the
+ * camera's *live* fov/aspect/z — this is what keeps a layer visible and
+ * correctly sized on any viewport instead of a fixed world-unit guess. */
+function applyPhotoTransform(sprite, tier, path, v){
+  if (!v) return;
+  sprite.visible = v.opacity > 0.01;
+  if (!sprite.visible) return;
+  const distance = scene.camera.position.z - tier.z;
+  const vFov = scene.camera.fov * Math.PI / 180;
+  const fullHeight = 2 * Math.tan(vFov / 2) * distance;
+  const halfWidth = (fullHeight / 2) * scene.camera.aspect;
+  const spriteHeight = tier.screenFrac * fullHeight * (v.scaleMul ?? 1) * (IS_MOBILE ? 0.72 : 1);
+  const spriteWidth = spriteHeight * aspectOf(path);
+  sprite.position.set(v.x * halfWidth, v.y * (fullHeight / 2), tier.z);
+  sprite.scale.set(spriteWidth, spriteHeight, 1);
+  sprite.material.opacity = v.opacity ?? 1;
+  sprite.material.rotation = ((v.rotate || 0) * Math.PI) / 180;
 }
 
 /**
  * Real timing data (word-level, transcription-grounded — see ATTRIBUTION.md)
  * from lyrics-data.mjs. Real choreography (position/opacity/scale/rotate/
- * blur/weight for every line, curated accent, camera, mood and the three
- * Three.js hero objects) from a genuine Theatre.js sequence in
- * assets/theatre-state.json (generated by tools/build-theatre-state.mjs —
- * see that file for why it's generated rather than hand-authored in
- * Theatre.js Studio's visual editor). Rendering here is just: scrub
- * `sheet.sequence.position` to audio.currentTime every frame, and apply
- * whatever values each object's onValuesChange hands back. No custom
- * per-frame motion math lives in this file — word-level kinetic entrance
- * and the sung/unsung sweep are the one deliberate exception, staying
- * outside Theatre.js since they're discrete per-timestamp state, not a
- * continuously tweened value (same reasoning the previous build used for
- * the sung-highlight).
+ * blur/weight for every line, camera, mood, and every parallax photo/doodle
+ * layer) from a genuine Theatre.js sequence in
+ * public/assets/theatre-state.json (generated by
+ * tools/build-theatre-state.mjs — see that file for why it's generated
+ * rather than hand-authored in Theatre.js Studio's visual editor).
+ * Rendering here is just: scrub `sheet.sequence.position` to
+ * audio.currentTime every frame, and apply whatever values each object's
+ * onValuesChange hands back. No custom per-frame motion math lives in this
+ * file — word-level kinetic entrance and the sung/unsung sweep are the one
+ * deliberate exception, staying outside Theatre.js since they're discrete
+ * per-timestamp state, not a continuously tweened value.
  */
 async function main(){
   const state = await (await fetch('/assets/theatre-state.json')).json();
@@ -100,13 +120,13 @@ async function main(){
   await project.ready;
 
   const introObj = sheet.object('intro-vinyl', { opacity:0, scale:1 });
-  introObj.onValuesChange(v => applyTransform(introVinyl, v));
+  introObj.onValuesChange(v => {
+    if (!v) return;
+    introVinyl.style.transform = `translate(-50%,-50%) scale(${v.scale})`;
+    introVinyl.style.opacity = v.opacity;
+  });
 
-  const introNotesWrap = buildAssetWrap({ asset:'musical-notes.png', side:'right' }, { topPercent: 24, tier:'ambient' });
-  const introNotesObj = sheet.object('intro-notes', { opacity:0, scale:1, rotate:0 });
-  introNotesObj.onValuesChange(v => applyTransform(introNotesWrap, v, { centerX:false }));
-
-  const moodObj = sheet.object('mood', { hue:280, warmth:0.15 });
+  const moodObj = sheet.object('mood', { hue:8, warmth:0.5 });
   moodObj.onValuesChange(v => {
     root.style.setProperty('--mood-hue', v.hue.toFixed(1));
     root.style.setProperty('--mood-warmth', v.warmth.toFixed(2));
@@ -122,36 +142,25 @@ async function main(){
     scene.camera.updateProjectionMatrix();
   });
 
-  // Hero glass objects are scaled down further on small screens (the same
-  // world-unit size reads much bigger against a narrow portrait frustum),
-  // and their `x` track is a fraction of the camera's live visible
-  // half-width rather than a fixed world offset — see the comment in
-  // tools/build-theatre-state.mjs for why.
-  const HERO_MOBILE_SCALE = IS_MOBILE ? 0.6 : 1;
-  HERO_WINDOWS.forEach(w => {
-    const obj = sheet.object(`hero-${w.type}`, { scale:0, x:0, y:0 });
-    const mesh = scene.heroObjects[w.type];
-    obj.onValuesChange(v => {
-      mesh.visible = v.scale > 0.01;
-      mesh.scale.setScalar(v.scale * HERO_MOBILE_SCALE);
-      const distance = scene.camera.position.z;
-      const vFov = scene.camera.fov * Math.PI / 180;
-      const halfHeight = Math.tan(vFov / 2) * distance;
-      const halfWidth = halfHeight * scene.camera.aspect;
-      mesh.position.set(v.x * halfWidth, v.y, 0);
-    });
+  PHOTO_LAYERS.forEach((layer, idx) => {
+    const tier = DEPTH_TIERS[layer.depth];
+    const path = assetPath(layer.asset);
+    const sprite = createPhotoSprite(path);
+    scene.scene.add(sprite);
+    const obj = sheet.object(`photo-${idx}`, { opacity:0, scaleMul:1, x:0, y:0, rotate:0 });
+    obj.onValuesChange(v => applyPhotoTransform(sprite, tier, path, v));
+  });
 
-    (COLLAGE_ASSETS[w.type] || []).forEach((cue, cIdx) => {
-      const wrap = buildCollageWrap(cue, 22 + cIdx * 30);
-      const cObj = sheet.object(`collage-${w.type}-${cIdx}`, { opacity:0, scale:1, rotate:0 });
-      cObj.onValuesChange(v => applyTransform(wrap, v, { centerX:false }));
-    });
+  DOODLE_LAYERS.forEach((d, idx) => {
+    const el = buildDoodle(d, idx);
+    const obj = sheet.object(`doodle-${idx}`, { opacity:0, scale:1, rotate:0 });
+    obj.onValuesChange(v => applyDoodleTransform(el, v));
   });
 
   let lineIndex = 0;
   const wordWatchers = [];
 
-  // A randomized subset of emotionally-loaded words gets a pink highlight
+  // A randomized subset of emotionally-loaded words gets a warm accent
   // instead of plain ink, re-rolled on every page load.
   const STOP_WORDS = new Set(['the','a','an','of','in','on','with','that','so','just','still','it','by','me','you','i','am','our']);
   const PRIORITY_WORDS = new Set(['sweetheart','love','true','dreaming','dreams','dream','moonlight','whisper','sweetheart?']);
@@ -165,15 +174,7 @@ async function main(){
   }
 
   TIMELINE.forEach((entry) => {
-    if (entry.type === 'gap'){
-      const key = entry.start.toFixed(2);
-      const cue = GAP_ASSETS[key];
-      if (!cue) return;
-      const wrap = buildAssetWrap(cue, { topPercent: 32 + (lineIndex % 3) * 14, tier:'ambient' });
-      const obj = sheet.object(`gap-${key}`, { opacity:0, scale:1, rotate:0 });
-      obj.onValuesChange(v => applyTransform(wrap, v, { centerX:false }));
-      return;
-    }
+    if (entry.type === 'gap') return;
 
     const i = lineIndex++;
     const el = document.createElement('div');
@@ -192,6 +193,7 @@ async function main(){
     (entry.words || []).forEach((w, wi) => {
       const span = document.createElement('span');
       span.className = 'word';
+      if (w.w.toLowerCase().replace(/[.,!?"']/g, '') === 'sweetheart') span.classList.add('word-script');
       span.textContent = w.w;
       lineEl.appendChild(span);
       if (wi < entry.words.length - 1) lineEl.appendChild(document.createTextNode(' '));
@@ -200,14 +202,8 @@ async function main(){
     el.appendChild(lineEl);
     stack.appendChild(el);
 
-    const lineObj = sheet.object(`line-${i}`, { x:0, y:0, opacity:1, scale:1, rotate:0, blur:0, weight:600 });
-    lineObj.onValuesChange(v => applyTransform(el, v));
-
-    if (entry.asset){
-      const wrap = buildAssetWrap({ asset: entry.asset, side: entry.side || 'left' }, { topPercent: 30 + (i % 4) * 12 });
-      const assetObj = sheet.object(`asset-${i}`, { opacity:0, scale:1, rotate:0 });
-      assetObj.onValuesChange(v => applyTransform(wrap, v, { centerX:false }));
-    }
+    const lineObj = sheet.object(`line-${i}`, { x:0, y:0, opacity:1, scale:1, rotate:0, blur:0, weight:550 });
+    lineObj.onValuesChange(v => applyLineTransform(el, v));
 
     randomizeAccents(wordEls);
     wordWatchers.push({ start: entry.start, end: entry.end, words: wordEls });

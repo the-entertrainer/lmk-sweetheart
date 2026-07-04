@@ -1,6 +1,4 @@
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { createHeroObject } from './heroObjects.js';
 
 export const IS_MOBILE = matchMedia('(max-width: 640px)').matches;
 const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -16,12 +14,16 @@ function makeBokehTexture(){
   const ctx = canvas.getContext('2d');
   const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
   grad.addColorStop(0, 'rgba(255,255,255,1)');
-  grad.addColorStop(0.4, 'rgba(255,255,255,.55)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,.6)');
+  grad.addColorStop(0.7, 'rgba(255,255,255,.15)');
   grad.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.generateMipmaps = false;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
   return tex;
 }
 
@@ -39,13 +41,13 @@ function buildParticles(){
   }
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   const material = new THREE.PointsMaterial({
-    size: IS_MOBILE ? 0.55 : 0.7,
+    size: IS_MOBILE ? 0.5 : 0.62,
     map: makeBokehTexture(),
     transparent: true,
-    opacity: 0.5,
+    opacity: 0.42,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-    color: new THREE.Color().setHSL(0.9, 0.6, 0.85),
+    color: new THREE.Color().setHSL(0.08, 0.7, 0.82),
   });
   const points = new THREE.Points(geo, material);
   points.userData = { speeds, phases, basePositions: positions.slice() };
@@ -63,26 +65,8 @@ export function initScene(canvas){
   const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50);
   camera.position.set(0, 0, 8);
 
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-
-  const keyLight = new THREE.DirectionalLight(0xffe6c9, 1.0);
-  keyLight.position.set(3, 4, 5);
-  scene.add(keyLight);
-  const rimLight = new THREE.PointLight(0xff8fb8, 3.5, 20);
-  rimLight.position.set(-4, -2, 3);
-  scene.add(rimLight);
-  scene.add(new THREE.AmbientLight(0x2a1230, 0.6));
-
   const particles = buildParticles();
   scene.add(particles);
-
-  const heroObjects = {
-    heart: createHeroObject('heart', 340),
-    bloom: createHeroObject('bloom', 320),
-    ribbon: createHeroObject('ribbon', 38),
-  };
-  Object.values(heroObjects).forEach(obj => scene.add(obj));
 
   function resize(){
     const w = window.innerWidth, h = window.innerHeight;
@@ -103,16 +87,13 @@ export function initScene(canvas){
         pos.array[i * 3] = basePositions[i * 3] + Math.cos(clock * speeds[i] * 0.7 + phases[i]) * 0.35;
       }
       pos.needsUpdate = true;
-      Object.values(heroObjects).forEach(obj => {
-        if (obj.visible) obj.rotation.y += dt * 0.18;
-      });
     }
     renderer.render(scene, camera);
   }
 
   function setParticleHue(hue){
-    particles.material.color.setHSL(hue / 360, 0.55, 0.82);
+    particles.material.color.setHSL(hue / 360, 0.65, 0.8);
   }
 
-  return { renderer, scene, camera, heroObjects, particles, render, resize, setParticleHue };
+  return { renderer, scene, camera, particles, render, resize, setParticleHue };
 }

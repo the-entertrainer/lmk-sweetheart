@@ -177,3 +177,89 @@ page (apply after every visual change, not just once)
    ended up using, decide explicitly (and note in ATTRIBUTION) whether each
    leftover fits the piece's tone — don't leave them referenced nowhere, and
    don't force them in just because they were downloaded.
+
+## Update: pivoting a whole visual direction from a user-provided reference
+
+The design above (plum/blush palette, abstract glass 3D objects, flat
+OpenMoji icons) was later **fully replaced** after the user shared a Canva
+animation showing the look they actually wanted: warm vintage sunset
+gradient, real photographic objects, a rounded-display + brush-script type
+pairing, thin line-art doodles. Lessons from that pivot, worth knowing
+before starting a similar rebuild:
+
+- **A short video is a far better design reference than a description.**
+  When a user says "I designed this in Canva, here's the idea," don't
+  settle for a text description or a single static frame — extract multiple
+  frames across the clip's duration (`ffmpeg -i clip.mp4 -vf fps=2.5
+  frame-%02d.png`, then view several) so you actually see the animation
+  arc: what's static from frame 1, what builds in, what holds, what exits.
+  A single frame (e.g. an auto-generated video thumbnail) will miss most of
+  the intent. `ffmpeg`/`ffprobe` are not preinstalled in this sandbox but
+  install cleanly via `apt-get install -y --no-install-recommends ffmpeg`
+  (an `apt-get update` first fixes stale-mirror 404s on some packages).
+- **The sandbox's Playwright-launched Chromium cannot reach *any* external
+  HTTPS host through the configured proxy** — confirmed by testing
+  `https://example.com` directly, not just the target site. Explicit
+  `chromium.launch({ proxy: { server: 'http://127.0.0.1:<port>' },
+  args:['--ignore-certificate-errors'] })` and various flag combinations
+  (`--disable-quic`, `--proxy-bypass-list`) did not fix it. This is a
+  browser-level limitation distinct from `curl`/`WebFetch`, which *do* work
+  fine through the same proxy. Don't burn time debugging this further —
+  fall back to `curl`/`WebFetch` for fetching reference content, and note
+  the limitation rather than fighting it.
+- **Adobe Stock (`asset_search` + `asset_license_and_download_stock` +
+  `image_remove_background`) is a far more reliable source of real
+  photographic cutouts than scraping small clip-art gallery sites.** Filter
+  `pricing: "free"`, prefer `isGenTech: false` results (real photos, not
+  AI-generated) if the user wants genuinely real photography, license with
+  `asset_license_and_download_stock` (free-tier assets cost nothing),
+  then `image_remove_background` gives a clean alpha cutout in one call.
+  This licensed 14 real vintage-object photos (gramophone, rotary phone,
+  pocket watch, rose, ring, etc.) in a handful of parallel tool-call
+  batches — much faster and more reliable than hunting individual
+  gallery/stock sites with `curl` (many small sites mislabel vector clip
+  art as "photo," or the actual subject doesn't match the search term).
+- **A hue offset applied to a CSS gradient stop needs re-checking every
+  time the base hue range changes.** The exact "sickly yellow-green" bug
+  from the first build (a fixed `+N` hue offset that only becomes a
+  problem at certain base hues) recurred in the second build's rewritten
+  gradient CSS, because the fix wasn't re-derived for the new palette's hue
+  range — it was a *different* line of CSS with the *same* class of bug.
+  When you change a palette's hue range, re-walk every value the range will
+  hit through any hue-math, don't just carry over "a small offset is fine"
+  as a memorized constant.
+- **Parallax/decorative layers need a "lane," not a symmetric ± range,
+  to reliably avoid a centered text column.** An initial design gave every
+  depth tier a symmetric drift range (`-driftX` to `+driftX`), which means
+  every layer's path *crosses the center* where the text lives — background
+  ("far") tiers with a narrower range are paradoxically *more* likely to
+  linger in the center than wide-sweeping foreground tiers. Fix: assign
+  each layer to one lateral lane (left-of-center or right-of-center) via
+  `laneInner`/`laneOuter` bounds that never cross into the text column's
+  half-width, and let only the *outer* bound vary by depth tier (near =
+  wide dramatic sweep near the edge, far = narrower band still outside the
+  column). Screenshot-test at a timestamp when the relevant layer is
+  mid-animation, not just at its start/end pose — the clutter/overlap only
+  showed up mid-drift, not in the entrance or exit frames.
+- **A sprite's photo shouldn't be forced into a fixed world-unit size.**
+  Bake a target *fraction of the camera's on-screen frustum* per depth tier
+  (`screenFrac`) and compute the actual world-space width/height from the
+  live camera fov/aspect/distance at render time (same technique as the
+  frustum-relative x/y positioning above) — this keeps every photo cutout
+  correctly sized on any viewport, and keeps near/far depth tiers reading
+  as "bigger/closer" vs "smaller/farther" regardless of screen size.
+- **`THREE.Sprite` is the right primitive for 2D photo cutouts drifting in
+  3D depth** (a classic multiplane-camera parallax technique) — it always
+  faces the camera, needs no lighting/environment map (unlike the glass
+  `MeshPhysicalMaterial` objects from the first build), and is much cheaper
+  to render. If a redesign moves from lit 3D geometry to flat photo
+  cutouts, also remove the now-unnecessary `RoomEnvironment`/PMREM/physical
+  lights from the Three.js scene setup — don't leave lighting rigged for
+  materials that no longer exist.
+- **A variable font's actual registered axes matter for
+  `font-variation-settings`.** Fraunces has real `opsz`/`wght`/`SOFT` axes;
+  Baloo 2 and Caveat (the fonts used in the pivot) only expose `wght`.
+  Setting an axis a font doesn't register is harmless (browsers ignore it),
+  but don't carry over a multi-axis `font-variation-settings` string from
+  one font to a different one without checking which axes the new font
+  actually has — it's dead weight at best and confusing to read at worst.

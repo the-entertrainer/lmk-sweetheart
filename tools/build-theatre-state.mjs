@@ -1,12 +1,12 @@
 /**
- * Generates assets/theatre-state.json — the pre-authored Theatre.js
+ * Generates public/assets/theatre-state.json — the pre-authored Theatre.js
  * sequence that src/main.js loads into a plain `@theatre/core` project at
  * runtime (no `@theatre/studio` ships to visitors).
  *
  * Theatre.js's own visual Studio (the mouse-driven keyframe editor) has no
  * display to run against in this environment, and — as of 0.7.2 — there is
  * no supported public API for creating sequenced keyframes from code either
- * (`studio.transaction`'s `set()` only writes *static* overrides unless a
+ * (`studio.transaction()`'s `set()` only writes *static* overrides unless a
  * prop has already been flagged "sequenced" by Studio's UI; see the
  * still-open https://github.com/theatre-js/theatre/issues/411). So instead
  * of driving a real browser, this writes the on-disk project-state format
@@ -20,22 +20,26 @@
  *
  * What's sequenced here (each a genuine keyframed track, not per-frame
  * math in the page):
- *  - `line-${i}`      per-line entrance/hold/exit motion + a variable-font
- *                     weight breathe on emotionally central lines
- *  - `asset-${i}`     the handful of curated 2D image accents
- *  - `gap-${key}`     ambient imagery during instrumental gaps
- *  - `intro-vinyl`    fade for the spun-up-front vinyl disc
- *  - `mood`           background hue/warmth crossfade between song sections
- *  - `camera`         a slow cinematic dolly, most active during hero windows
- *  - `hero-${type}`   scale/position for each of the three Three.js glass
- *                     objects (heart / bloom / ribbon), one per chorus/finale
+ *  - `line-${i}`   per-line entrance/hold/exit motion + a variable-font
+ *                  weight breathe
+ *  - `mood`        background hue/warmth crossfade between song sections
+ *  - `camera`      a slow, subtle breathing dolly across the whole song
+ *  - `photo-${i}`  one per PHOTO_LAYERS entry: a real photo cutout drifting
+ *                  across its depth tier's lane (see DEPTH_TIERS) —
+ *                  continuous lateral motion for its whole visible window,
+ *                  not just an enter/hold/exit pose
+ *  - `doodle-${i}` one per DOODLE_LAYERS entry: a thin line-art icon's
+ *                  fade/scale/rotate
  *
  * Run with: node tools/build-theatre-state.mjs
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LYRICS, GAP_ASSETS, INTRO_ASSET, HERO_WINDOWS, COLLAGE_ASSETS, MOODS, TOTAL_DURATION, buildTimeline, VARIANTS } from '../src/lyrics-data.mjs';
+import {
+  LYRICS, PHOTO_LAYERS, DOODLE_LAYERS, DEPTH_TIERS, MOODS, TOTAL_DURATION,
+  buildTimeline, VARIANTS,
+} from '../src/lyrics-data.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -80,9 +84,9 @@ function pushKf(bucket, t, values){
 }
 
 /**
- * Six distinct motion recipes, refreshed for a slower, more considered
- * "editorial" feel than the previous build's snappier PowerPoint-adjacent
- * curves: bigger depth cues (blur + scale), longer holds, gentler overshoot.
+ * Six distinct motion recipes for the lyric lines themselves — a slower,
+ * more considered "editorial" feel: bigger depth cues (blur + scale),
+ * longer holds, gentler overshoot.
  */
 function lineRecipe(variant){
   const R = {
@@ -98,29 +102,11 @@ function lineRecipe(variant){
 const ARRIVED = { x:0, y:0, opacity:1, scale:1, rotate:0, blur:0 };
 const LEAD = 1.7, FADE = 2.1;
 
-function inHeroWindow(t){
-  return HERO_WINDOWS.find(w => t >= w.start && t < w.end);
-}
-
 const TIMELINE = buildTimeline(LYRICS, TOTAL_DURATION);
 let lineIndex = 0;
 
 TIMELINE.forEach((entry) => {
-  if (entry.type === 'gap'){
-    const key = entry.start.toFixed(2);
-    const cue = GAP_ASSETS[key];
-    if (!cue) return;
-    const bucket = {};
-    const rotate = ((lineIndex * 53) % 17) - 8;
-    const span = entry.end - entry.start;
-    const holdEnd = entry.start + Math.max(span * 0.6, span - 1.0);
-    pushKf(bucket, entry.start + 0.15, {opacity:0, scale:0.5, rotate});
-    pushKf(bucket, entry.start + 1.0,  {opacity:0.8, scale:1, rotate});
-    pushKf(bucket, holdEnd,            {opacity:0.8, scale:1, rotate});
-    pushKf(bucket, entry.end,          {opacity:0, scale:0.66, rotate});
-    addObject(`gap-${key}`, bucket);
-    return;
-  }
+  if (entry.type === 'gap') return; // no per-gap imagery anymore — see PHOTO_LAYERS
 
   const i = lineIndex++;
   const variant = VARIANTS[i % VARIANTS.length];
@@ -137,55 +123,15 @@ TIMELINE.forEach((entry) => {
   pushKf(bucket, entry.end, ARRIVED);
   pushKf(bucket, entry.end + FADE, rec.exit);
 
-  // A variable-font weight breathe on lines that fall inside a hero
-  // window — the visual "emphasis" is shared between the type and the
-  // glass object behind it, rather than piling more decoration onto the
-  // line itself.
-  const hero = inHeroWindow(entry.start);
+  // A gentle variable-font weight breathe on every line's hold — the
+  // emphasis lives in the type itself rather than piling on decoration.
   const midpoint = entry.start + (entry.end - entry.start) / 2;
-  if (hero){
-    pushKf(bucket, entry.start, { weight: 560 });
-    pushKf(bucket, midpoint, { weight: 720 });
-    pushKf(bucket, entry.end, { weight: 560 });
-  } else {
-    pushKf(bucket, entry.start, { weight: 600 });
-    pushKf(bucket, entry.end, { weight: 600 });
-  }
+  pushKf(bucket, entry.start, { weight: 550 });
+  pushKf(bucket, midpoint, { weight: 680 });
+  pushKf(bucket, entry.end, { weight: 550 });
 
   addObject(`line-${i}`, bucket);
-
-  if (entry.asset){
-    const aBucket = {};
-    const staticRotate = ((i * 47) % 13) - 6;
-    pushKf(aBucket, entry.start - 0.6, {opacity:0, scale:0.6, rotate:staticRotate});
-    pushKf(aBucket, entry.start + 0.5, {opacity:1, scale:1, rotate:staticRotate});
-    pushKf(aBucket, entry.end,         {opacity:1, scale:1, rotate:staticRotate});
-    pushKf(aBucket, entry.end + 1.3,   {opacity:0, scale:0.75, rotate:staticRotate});
-    addObject(`asset-${i}`, aBucket);
-  }
 });
-
-// Intro vinyl-disc ambience, under the spoken banter before the singing starts.
-{
-  const bucket = {};
-  pushKf(bucket, 0.2, {opacity:0, scale:0.8});
-  pushKf(bucket, 1.2, {opacity:0.95, scale:1});
-  pushKf(bucket, INTRO_ASSET.end - 1.2, {opacity:0.95, scale:1});
-  pushKf(bucket, INTRO_ASSET.end, {opacity:0, scale:0.9});
-  addObject('intro-vinyl', bucket);
-}
-
-// A musical-note accent right as the spoken banter names "that old love
-// song" (5.8s) — the one place in the whole piece where the picture is
-// literally what's being said out loud, held through the "Russ?" aside.
-{
-  const bucket = {};
-  pushKf(bucket, 5.3, { opacity:0, scale:0.6, rotate:-6 });
-  pushKf(bucket, 6.1, { opacity:0.75, scale:1, rotate:-6 });
-  pushKf(bucket, 8.6, { opacity:0.75, scale:1, rotate:-6 });
-  pushKf(bucket, 9.4, { opacity:0, scale:0.7, rotate:-6 });
-  addObject('intro-notes', bucket);
-}
 
 // Background mood — hue/warmth crossfade at each section boundary instead
 // of a hard cut, so the whole room's color temperature breathes with the
@@ -197,8 +143,6 @@ TIMELINE.forEach((entry) => {
     pushKf(hueBucket, mood.start, { hue: mood.hue });
     pushKf(warmthBucket, mood.start, { warmth: mood.warmth });
     if (next){
-      // hold most of the way, then start crossfading ~3s before the next
-      // section so the shift reads as a breath, not a jump cut
       const crossStart = Math.max(mood.start, next.start - 3.2);
       pushKf(hueBucket, crossStart, { hue: mood.hue });
       pushKf(warmthBucket, crossStart, { warmth: mood.warmth });
@@ -209,55 +153,53 @@ TIMELINE.forEach((entry) => {
   addObject('mood', Object.assign({}, hueBucket, warmthBucket));
 }
 
-// Camera — a slow, subtle dolly that only really moves during the three
-// hero windows (elsewhere the frame just holds, since there's no glass
-// object to give the movement meaning, and a typography-only screen
-// shouldn't be jostled for its own sake).
+// Camera — a slow, subtle breathing dolly across the whole song. Kept
+// deliberately gentle: the parallax feel now comes from the photo layers'
+// own depth-tiered drift, so the camera doesn't need to do much work and
+// constant dramatic movement combined with many drifting layers would
+// read as seasick rather than cinematic.
 {
   const bucket = {};
-  pushKf(bucket, 0, { z: 8, fov: 45, yaw: 0 });
-  HERO_WINDOWS.forEach((w, idx) => {
-    const dollyStart = w.start - 1.5;
-    const mid = (w.start + w.end) / 2;
-    const yaw = idx % 2 === 0 ? 0.09 : -0.09;
-    pushKf(bucket, Math.max(0, dollyStart), { z: 8, fov: 45, yaw: 0 });
-    pushKf(bucket, w.start + 1.5, { z: 6.6, fov: 42, yaw });
-    pushKf(bucket, mid, { z: 6.9, fov: 42.5, yaw: -yaw * 0.6 });
-    pushKf(bucket, w.end - 1.5, { z: 6.6, fov: 42, yaw });
-    pushKf(bucket, w.end, { z: 8, fov: 45, yaw: 0 });
-  });
+  for (let t = 0; t <= TOTAL_DURATION; t += 18){
+    const phase = (t / 18) % 2;
+    pushKf(bucket, t, { z: phase < 1 ? 8.3 : 7.7, fov: 45, yaw: phase < 1 ? 0.035 : -0.035 });
+  }
   addObject('camera', bucket);
 }
 
-// The three Three.js glass hero objects — one owns each whole
-// chorus/finale stanza. Scale-to-zero doubles as visibility (a
-// transmissive material doesn't alpha-composite cleanly, so hiding via
-// scale avoids any translucency-over-translucency artifacts).
-HERO_WINDOWS.forEach((w, idx) => {
+// Photo layers — real cutouts drifting laterally across their whole
+// visible window (not just a static hold), each confined to one lane (left
+// or right of the text column, never crossing through the middle) so a
+// large, fast-moving cutout can never end up sitting on top of the type —
+// see DEPTH_TIERS' laneInner/laneOuter in src/lyrics-data.mjs.
+PHOTO_LAYERS.forEach((layer, idx) => {
+  const tier = DEPTH_TIERS[layer.depth];
+  const lane = idx % 2 === 0 ? -1 : 1;
+  const outer = lane * (tier.laneOuter + 0.15); // fully offscreen-ish entrance/exit
+  const edge = lane * tier.laneOuter;           // its widest sweep, near the screen edge
+  const near = lane * tier.laneInner;           // its closest approach to the text column
+  const yBase = ((idx % 3) - 1) * 0.24;
+  const bucket = {};
+
+  pushKf(bucket, layer.start - 0.6, { opacity:0, scaleMul:0.55, x:outer, y:yBase, rotate: lane * -6 });
+  pushKf(bucket, layer.start + 0.5, { opacity:tier.opacity, scaleMul:1, x:edge, y:yBase, rotate: lane * -3 });
+  pushKf(bucket, (layer.start + layer.end) / 2, { opacity:tier.opacity, scaleMul:1, x:near, y:yBase + 0.14, rotate:0 });
+  pushKf(bucket, layer.end - 0.5, { opacity:tier.opacity, scaleMul:1, x:edge, y:yBase, rotate: lane * 3 });
+  pushKf(bucket, layer.end, { opacity:0, scaleMul:0.6, x:outer, y:yBase, rotate: lane * 6 });
+
+  addObject(`photo-${idx}`, bucket);
+});
+
+// Doodle line-art accents — thin, cream, decorative punctuation (see
+// src/doodles/) fading in and out near (but never under) the text column.
+DOODLE_LAYERS.forEach((d, idx) => {
   const bucket = {};
   const side = idx % 2 === 0 ? -1 : 1;
-  // `x` is a *fraction of the camera's visible half-width* at the hero
-  // object's depth (applied in src/main.js using the live camera aspect),
-  // not a raw world-unit offset — that's what keeps it pinned to the
-  // margin, clear of the centered text column, on every viewport from a
-  // narrow phone to an ultrawide monitor instead of just going off-frustum
-  // on portrait screens.
-  pushKf(bucket, w.start - 1.2, { scale:0, x: side * 0.86, y: 0.3 });
-  pushKf(bucket, w.start + 1.6, { scale:1, x: side * 0.74, y: 0.2 });
-  pushKf(bucket, (w.start + w.end) / 2, { scale:1.08, x: side * 0.68, y: -0.2 });
-  pushKf(bucket, w.end - 1.4, { scale:1, x: side * 0.74, y: 0.2 });
-  pushKf(bucket, w.end, { scale:0, x: side * 0.86, y: 0.3 });
-  addObject(`hero-${w.type}`, bucket);
-
-  (COLLAGE_ASSETS[w.type] || []).forEach((cue, cIdx) => {
-    const cBucket = {};
-    const rotate = cIdx === 0 ? -6 : 5;
-    pushKf(cBucket, w.start + 0.4, { opacity:0, scale:0.7, rotate });
-    pushKf(cBucket, w.start + 2.2, { opacity:0.5, scale:1, rotate });
-    pushKf(cBucket, w.end - 2.2,   { opacity:0.5, scale:1, rotate });
-    pushKf(cBucket, w.end - 0.2,   { opacity:0, scale:0.8, rotate });
-    addObject(`collage-${w.type}-${cIdx}`, cBucket);
-  });
+  pushKf(bucket, d.start - 0.5, { opacity:0, scale:0.6, rotate: side * -12 });
+  pushKf(bucket, d.start + 0.6, { opacity:0.8, scale:1, rotate: side * -8 });
+  pushKf(bucket, d.end - 0.6, { opacity:0.8, scale:1, rotate: side * 8 });
+  pushKf(bucket, d.end, { opacity:0, scale:0.7, rotate: side * 12 });
+  addObject(`doodle-${idx}`, bucket);
 });
 
 const state = {
