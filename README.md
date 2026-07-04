@@ -1,16 +1,11 @@
-# Let Me Call You Sweetheart — An Interactive Lyric Sync
+# Let Me Call You Sweetheart — An Ink-Doodle Lyric Page
 
-A single-page, mobile-first interactive lyric video — huge bold serif
-typography over a maximalist wash of real vintage botanical flower
-illustrations — built around a genuinely public-domain 1910 love song.
-Tap **Begin the Reel**, then scroll to try to keep the lyrics in sync
-with the waltz yourself. It's genuinely hard to nail by hand — after a
-bit of struggling, the page calls it out and offers to take over:
-
-> "Hey — you can't really enjoy the song if you keep trying to figure out
-> the perfect sync. Lemme just do that for you."
->
-> **Can you "sync" for me? ☺️** · **I want to do it myself 😎**
+A single-page lyric experience for a genuinely public-domain 1910 love
+song. There is exactly one control: a liquid ink-blob play button. Press
+it. The page scrolls itself, in time with the music, all the way through
+— huge bold handwritten lyric type surfacing over hand-drawn botanical ink
+doodles on a plain paper background. No intro screen, no instructions, no
+mode toggle, no progress bar. Nothing to configure or get right.
 
 ## What's actually in this build
 
@@ -22,23 +17,31 @@ bit of struggling, the page calls it out and offers to take over:
   [faster-whisper](https://github.com/SYSTRAN/faster-whisper) directly on
   that recording — it's transcription-grounded to the actual waveform,
   not guessed.
-- **Real flowers, properly matted.** Every illustration in
-  `assets/clipart/` is a CC0 vintage botanical illustration (roses,
-  lilacs, poppies, hydrangea, wildflower sprays…) sourced via
-  [Openverse](https://openverse.org). The as-served files had a
-  checkerboard baked into the pixels as a fake "transparency" preview; a
-  local script reconstructed genuine alpha (luminance threshold +
-  border-connected flood fill) before they were saved into the repo. See
-  `ATTRIBUTION.md` for full sourcing — including why a stock-photo
-  reference image handed to this project was deliberately *not* used
-  (visible Dreamstime watermark = not rights-clear).
-- **A visual system built to feel warm, not like a dashboard.** Bodoni
-  Moda + Cormorant Garamond typography (no monospace UI chrome), a
-  blush/rose-gold palette, pill-shaped buttons, procedural film grain +
-  vignette, and an iris-wipe open — flowers do the maximalist work, the
-  UI stays out of their way.
+- **Every flower doodle is procedurally generated, not sourced.** There
+  are no image assets at all beyond the audio and a tiny paper-grain
+  texture. `assets/clipart/` and third-party stock/clip-art are gone
+  entirely. Instead, `index.html` embeds ~18 hand-crafted SVG line-doodle
+  symbols (daisy, rose, fern, tulip, wildflower, berry branch, tendril…),
+  built from parametric bezier curves with organic per-point jitter so
+  they read as sketched, not vector-perfect. Real, native transparency;
+  zero licensing question; a few KB total instead of megabytes of PNGs.
+  See `ATTRIBUTION.md` for the full method and for why an earlier
+  stock-photo reference handed to this project was deliberately *not*
+  used (visible Dreamstime watermark = not rights-clear).
+- **One control, designed with intent.** The play/pause button is an
+  organic ink-blob shape (its own generated bezier path, not a plain
+  circle) with a gentle idle "breathing" animation, a squash-and-twist
+  press response, an ink-ripple burst on tap, and a rotating icon
+  cross-fade between play and pause. Everything else — hero copy, mode
+  switches, progress UI, timestamps — was deliberately removed.
+- **Doodles draw themselves in.** Each doodle is cloned into the page as
+  real `<path>`/`<circle>` elements (not `<use>`, so each stroke's actual
+  length is measurable), given a `stroke-dasharray` equal to its own
+  length, and revealed via `stroke-dashoffset` as it scrolls into view —
+  so it looks like it's being drawn in ink, stroke by stroke, line by
+  line, rather than just fading in.
 
-## The math (the part that actually matters)
+## The math (still the soul of it)
 
 - The whole lyrics section is one continuous scroll — no inner scroll
   boxes, no fake "jump to element" auto-scroll.
@@ -46,26 +49,27 @@ bit of struggling, the page calls it out and offers to take over:
   auto-inserts filler blocks for every instrumental gap greater than
   0.6s, so the DOM's total height always maps to the *exact* song
   duration with zero unaccounted time — including the ~15s orchestral
-  coda near the end, which becomes a dedicated clip-art moment instead of
+  coda near the end, which becomes a dedicated doodle moment instead of
   dead scroll space.
-- Each block's height is `(end − start) × 70px/sec`, so a constant
-  scroll speed maps to a constant playback speed.
-- **Manual mode:** scroll position → fraction of the lyrics section →
-  multiplied by total duration → written straight to `audio.currentTime`.
-  Scroll unevenly and the song audibly stutters; that's the built-in
-  difficulty, not a fake timer.
-- **Auto mode:** the exact inverse — a `requestAnimationFrame` loop reads
-  `audio.currentTime` every frame and eases `window.scrollTo` toward the
-  matching position.
-- **Floating clip art** is choreographed with GSAP + ScrollTrigger,
-  anchored to the same DOM blocks the lyric timing already built — so
-  every peek-in/slide-out is driven by scroll position and works
-  identically whether a human or auto-mode is doing the scrolling.
+- Each block's height is `(end − start) × 80px/sec`, so a constant
+  playback speed maps to a constant scroll speed.
+- There is only one direction now: `audio.currentTime` drives scroll
+  position (`requestAnimationFrame` reads playback time every frame and
+  eases `window.scrollTo` toward the matching position). The earlier
+  manual scroll-to-seek "prank" mode has been removed entirely — this
+  build has no mode to choose, so there's nothing for it to conflict
+  with.
 
-GSAP and ScrollTrigger are vendored locally in `assets/vendor/` rather
-than pulled from a CDN at runtime — the core scroll↔time sync also has a
-plain-CSS fallback path if, for whatever reason, GSAP fails to load, so a
-choreography hiccup can never take the whole page down with it.
+## A note on the design process
+
+Part of this design was informed by Google Stitch (a real, authenticated
+`stitch.googleapis.com` MCP endpoint) as a design-reference tool — a
+generated mockup and its accompanying design-system spec directly
+informed the final ink-blob button technique (an SVG mask/shape rather
+than a plain circle), the "doodles sit behind text, faint, textural"
+layering rule, and the paper/ink monochrome palette. Nothing from Stitch
+was copied verbatim into the shipped code; it was used the way a mood
+board or reference render is used, then hand-implemented here.
 
 ## Run locally
 
@@ -83,12 +87,15 @@ npx http-server -p 8080 -c-1
 
 1. Drop your MP3 at `audio/<name>.mp3` and update the `<audio src>` in
    `index.html`.
-2. Get real timestamps fast: run `faster-whisper` on it (see the snippet
-   in `ATTRIBUTION.md`'s method notes) or open the page with `?tag=1` in
-   the URL and tap along to the track — it logs `audio.currentTime` to an
-   on-screen panel you can copy straight into the `LYRICS` array.
-3. Swap `assets/clipart/*.png` for art matching the new song's mood —
-   each `LYRICS`/`GAP_CLIPS` entry just references a filename.
+2. Get real timestamps fast: run `faster-whisper` on it, or open the page
+   with `?tag=1` in the URL and tap along to the track — it logs
+   `audio.currentTime` to an on-screen panel you can copy straight into
+   the `LYRICS` array.
+3. The doodle symbols are plain inline SVG in the `<defs>` block at the
+   top of `<body>` — swap `LYRICS`/`GAP_DOODLES` entries to reference
+   different `doodle-*` ids, or add new symbols following the same
+   pattern (see `gen_doodles.py`-style parametric generation notes in
+   `ATTRIBUTION.md`).
 
 ## Deploy
 
@@ -99,7 +106,7 @@ static site, done.
 
 ## Credits
 
-Song, recording, clip art, and font sourcing all documented in
-`ATTRIBUTION.md`. Built by Naveen (the-entertrainer). Original design
-spec for the concept (then built around a different, copyrighted song)
-is kept in `DESIGN-DOC.md` for reference.
+Song and recording sourcing documented in `ATTRIBUTION.md`. Built by
+Naveen (the-entertrainer). Earlier design directions (a Katy Perry
+concept, then a maximalist floral rebuild) are kept in `DESIGN-DOC.md`
+for reference; this ink-doodle build superseded both.
