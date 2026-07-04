@@ -5,23 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Let Me Call You Sweetheart — An Interactive Lyric Sync</title>
 <meta name="description" content="A 1910 love song, staged like a silent-film title card. Scroll to sync it yourself, or let it sync itself.">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#170b10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet">
 <script src="assets/vendor/gsap.min.js"></script>
 <script src="assets/vendor/ScrollTrigger.min.js"></script>
 <style>
   :root{
-    --ink:#0b0b0c;
-    --ink-2:#161513;
-    --cream:#f2ede1;
-    --paper:#e7dcc2;
-    --gold:#c9a24b;
-    --brass:#8a6a3a;
-    --brown:#6b4a2b;
-    --text-dim:rgba(242,237,225,.56);
-    --px-per-sec:70;
+    --ink:#170b10;
+    --ink-2:#241019;
+    --cream:#f8ecd9;
+    --paper:#efe0c4;
+    --rose:#e28fa0;
+    --rose-deep:#c65f78;
+    --gold:#cf9f52;
+    --leaf:#7c9b74;
+    --text-dim:rgba(248,236,217,.6);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -33,9 +33,9 @@
     touch-action:pan-y;
     position:relative;
   }
-  ::selection{background:var(--gold);color:#171308;}
+  ::selection{background:var(--rose);color:#2a0f16;}
   .display{font-family:'Bodoni Moda',Georgia,serif;}
-  .typewriter{font-family:'Courier Prime',monospace;}
+  .label{ font-family:'Cormorant Garamond',serif; font-variant:small-caps; letter-spacing:.14em; }
 
   /* ---------- FILM GRAIN + VIGNETTE (always on top, whole document) ---------- */
   #grain{
@@ -69,66 +69,81 @@
     display:flex; flex-direction:column; justify-content:space-between;
     padding:2rem 1.25rem 2.4rem;
     position:relative;
+    overflow:hidden;
     background:
-      radial-gradient(140% 90% at 50% -20%, rgba(201,162,75,.16), transparent 55%),
+      radial-gradient(140% 90% at 50% -10%, rgba(226,143,160,.22), transparent 55%),
+      radial-gradient(120% 80% at 50% 110%, rgba(124,155,116,.14), transparent 60%),
       var(--ink);
     text-align:center;
   }
+  .hero-bloom{ position:absolute; z-index:0; pointer-events:none; filter:drop-shadow(0 20px 40px rgba(0,0,0,.5)); opacity:0; }
+  #hero-bloom-1{ top:-6%; left:-14%; width:min(62vw, 340px); }
+  #hero-bloom-2{ bottom:-8%; right:-16%; width:min(66vw, 380px); transform:scaleX(-1); }
+  #hero-bloom-3{ bottom:8%; left:-10%; width:min(40vw, 220px); opacity:0; }
+  @media (min-width:640px){
+    #hero-bloom-1{ width:320px; } #hero-bloom-2{ width:360px; } #hero-bloom-3{ width:200px; }
+  }
   .brand{
+    position:relative; z-index:1;
     display:flex; align-items:center; justify-content:center; gap:.5rem;
-    font-size:.72rem; letter-spacing:.22em; text-transform:uppercase;
+    font-size:.8rem; letter-spacing:.14em;
     color:var(--text-dim);
   }
-  .hero-mid{ display:flex; flex-direction:column; align-items:center; gap:1.3rem; margin-top:1.6rem; }
+  .hero-mid{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:1.4rem; margin-top:1.6rem; }
 
   .frame-badge{
-    border:1px solid rgba(242,237,225,.35);
-    padding:.35rem 1rem;
-    font-size:.7rem; letter-spacing:.24em; text-transform:uppercase;
-    color:var(--gold);
-    position:relative;
+    border:1px solid rgba(226,143,160,.45);
+    border-radius:999px;
+    padding:.4rem 1.2rem;
+    font-size:.75rem; letter-spacing:.18em;
+    font-variant:small-caps;
+    color:var(--rose);
   }
   .frame-badge::before, .frame-badge::after{
-    content:'❖'; color:var(--gold); margin:0 .5rem; font-size:.65rem; vertical-align:middle;
+    content:'❀'; color:var(--rose); margin:0 .5rem; font-size:.7rem; vertical-align:middle;
   }
 
   h1.title{
-    font-weight:800; font-style:italic; line-height:1.0; letter-spacing:-.01em;
-    font-size:clamp(2.5rem, 11vw, 5rem);
+    font-weight:800; font-style:italic; line-height:.98; letter-spacing:-.01em;
+    font-size:clamp(3.4rem, 15vw, 7.5rem);
     color:var(--cream);
-    text-shadow:0 0 40px rgba(201,162,75,.25);
+    text-shadow:0 0 50px rgba(226,143,160,.3);
     margin:0;
   }
   .subtitle{
-    font-family:'Courier Prime',monospace; font-size:.78rem; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--text-dim); margin:0;
+    font-family:'Cormorant Garamond',serif; font-style:italic; font-size:1.05rem; letter-spacing:.04em;
+    color:var(--text-dim); margin:0;
   }
 
   .instructions{
-    max-width:430px;
-    border-top:1px solid rgba(201,162,75,.4);
-    border-bottom:1px solid rgba(201,162,75,.4);
-    padding:1.2rem 0;
-    font-size:1.15rem; font-style:italic; line-height:1.6; color:var(--cream);
+    max-width:440px;
+    border-top:1px solid rgba(226,143,160,.35);
+    border-bottom:1px solid rgba(226,143,160,.35);
+    padding:1.3rem 0;
+    font-size:1.25rem; font-style:italic; line-height:1.65; color:var(--cream);
   }
-  .instructions b{color:var(--gold); font-style:normal;}
+  .instructions b{color:var(--rose); font-style:normal;}
 
   #start-btn{
-    border:1px solid var(--gold); cursor:pointer; background:transparent;
-    font-family:'Courier Prime',monospace; font-weight:700; font-size:.9rem; letter-spacing:.18em;
-    text-transform:uppercase;
-    color:var(--gold);
-    padding:1rem 2rem;
-    transition:background .2s ease, color .2s ease;
+    position:relative; z-index:1;
+    border:none; cursor:pointer;
+    background:linear-gradient(100deg,var(--rose-deep),var(--rose));
+    font-family:'Bodoni Moda',serif; font-weight:700; font-style:italic; font-size:1.15rem; letter-spacing:.02em;
+    color:#2a0f16;
+    padding:1.05rem 2.4rem;
+    border-radius:999px;
+    box-shadow:0 16px 34px -12px rgba(198,95,120,.55);
+    transition:transform .15s ease, box-shadow .15s ease;
   }
-  #start-btn:hover, #start-btn:active{ background:var(--gold); color:#171308; }
+  #start-btn:hover{ transform:translateY(-2px); box-shadow:0 20px 40px -12px rgba(198,95,120,.65); }
+  #start-btn:active{ transform:translateY(0) scale(.98); }
 
   .scroll-hint{
+    position:relative; z-index:1;
     display:flex; flex-direction:column; align-items:center; gap:.5rem;
-    color:var(--text-dim); font-size:.68rem; letter-spacing:.24em; text-transform:uppercase;
-    font-family:'Courier Prime',monospace;
+    color:var(--text-dim); font-size:.85rem; font-style:italic; letter-spacing:.04em;
   }
-  .chevron{width:14px;height:14px;border-right:1px solid var(--gold);border-bottom:1px solid var(--gold);
+  .chevron{width:14px;height:14px;border-right:1px solid var(--rose);border-bottom:1px solid var(--rose);
     transform:rotate(45deg); animation:bob 1.7s ease-in-out infinite;}
   @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.35;}50%{transform:rotate(45deg) translate(3px,3px);opacity:1;}}
 
@@ -136,119 +151,128 @@
   #player-bar{
     position:fixed; top:0; left:0; right:0; z-index:40;
     display:flex; align-items:center; justify-content:space-between; gap:.7rem;
-    padding:.6rem 1rem; padding-top:calc(.6rem + env(safe-area-inset-top));
-    background:rgba(11,11,12,.82); backdrop-filter:blur(14px);
-    border-bottom:1px solid rgba(201,162,75,.3);
+    padding:.55rem 1rem; padding-top:calc(.55rem + env(safe-area-inset-top));
+    background:rgba(23,11,16,.78); backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(226,143,160,.22);
     transform:translateY(-110%); transition:transform .5s cubic-bezier(.23,1,.32,1);
   }
   #player-bar.visible{transform:translateY(0);}
   .pb-left{display:flex; align-items:center; gap:.65rem; min-width:0;}
   #play-btn{
-    flex:none; width:2.3rem; height:2.3rem; border-radius:50%; border:1px solid var(--gold);
-    cursor:pointer; background:transparent; color:var(--gold);
-    display:flex; align-items:center; justify-content:center; font-size:.85rem;
+    flex:none; width:2.4rem; height:2.4rem; border-radius:50%; border:none;
+    cursor:pointer; background:linear-gradient(135deg,var(--rose-deep),var(--rose)); color:#2a0f16;
+    display:flex; align-items:center; justify-content:center; font-size:.9rem;
   }
-  .clock{ position:relative; width:1.7rem; height:1.7rem; border-radius:50%; border:1px solid var(--gold); flex:none; }
-  .clock i{ position:absolute; left:50%; top:50%; background:var(--gold); border-radius:2px; transform-origin:50% 100%; }
-  .clock .hh{ width:1.5px; height:32%; margin-left:-.75px; margin-top:-32%; }
-  .clock .mm{ width:1px; height:42%; margin-left:-.5px; margin-top:-42%; opacity:.75;}
   .pb-meta{min-width:0;}
-  .pb-title{font-family:'Bodoni Moda',serif; font-style:italic; font-weight:600; font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .pb-time{font-family:'Courier Prime',monospace; font-size:.65rem; color:var(--text-dim);}
+  .pb-title{font-family:'Bodoni Moda',serif; font-style:italic; font-weight:600; font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .pb-time{font-family:'Cormorant Garamond',serif; font-size:.75rem; color:var(--text-dim);}
   .mode-badge{
-    flex:none; font-family:'Courier Prime',monospace;
-    font-size:.6rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
-    padding:.3rem .6rem; white-space:nowrap; border:1px solid rgba(242,237,225,.3); color:var(--text-dim);
+    flex:none; font-family:'Cormorant Garamond',serif; font-variant:small-caps;
+    font-size:.85rem; font-weight:600; letter-spacing:.06em;
+    padding:.3rem .8rem; white-space:nowrap; border-radius:999px;
+    border:1px solid rgba(248,236,217,.28); color:var(--text-dim);
   }
-  .mode-badge.auto{background:var(--gold); border-color:var(--gold); color:#171308;}
-  #progress-rail{ position:absolute; left:0; bottom:-1px; height:1px; width:100%; background:rgba(242,237,225,.12); }
-  #progress-fill{ height:100%; width:0%; background:var(--gold); transition:width .1s linear; }
+  .mode-badge.auto{background:var(--rose); border-color:var(--rose); color:#2a0f16;}
+  #progress-rail{ position:absolute; left:0; bottom:-1px; height:2px; width:100%; background:rgba(248,236,217,.1); }
+  #progress-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--rose-deep),var(--rose)); transition:width .1s linear; }
 
   /* ---------- LYRICS ---------- */
-  #lyrics{ position:relative; max-width:680px; margin:0 auto; padding:7rem 1.4rem 8rem; }
+  #lyrics{ position:relative; max-width:760px; margin:0 auto; padding:7rem 1.2rem 8rem; }
   .section-label{
-    font-family:'Courier Prime',monospace; font-size:.68rem; letter-spacing:.3em; text-transform:uppercase;
-    color:var(--gold); opacity:.8; text-align:center; margin-bottom:1.2rem;
+    font-family:'Cormorant Garamond',serif; font-variant:small-caps; font-size:1.05rem; letter-spacing:.22em;
+    color:var(--rose); opacity:.9; text-align:center; margin-bottom:1.4rem;
   }
-  .section-label::before, .section-label::after{ content:'—— '; }
+  .section-label::before, .section-label::after{ content:'❀ '; letter-spacing:0; }
   .lyric-block{ position:relative; display:flex; align-items:center; justify-content:center; min-height:110px; text-align:center; }
   .lyric-line{
-    font-weight:500; font-size:clamp(1.6rem, 5vw, 2.9rem); line-height:1.32;
-    color:var(--cream); opacity:.24; transform:scale(.95) translateY(6px);
+    font-weight:700; font-size:clamp(2.4rem, 8.6vw, 5.2rem); line-height:1.18;
+    color:var(--cream); opacity:.22; transform:scale(.94) translateY(8px);
     transition:opacity .55s cubic-bezier(.23,1,.32,1), transform .55s cubic-bezier(.23,1,.32,1), color .55s ease;
     font-style:italic;
+    position:relative; z-index:3;
   }
   .lyric-line.spoken{
-    font-family:'Courier Prime',monospace; font-style:normal; font-size:clamp(1rem,2.6vw,1.3rem);
-    letter-spacing:.02em; color:var(--text-dim); max-width:520px;
+    font-weight:500; font-style:italic; font-size:clamp(1.3rem,4vw,1.9rem);
+    letter-spacing:.01em; color:var(--text-dim); max-width:600px;
   }
-  .lyric-line.active{ opacity:1; transform:scale(1.03) translateY(0); color:var(--gold); text-shadow:0 0 30px rgba(201,162,75,.35); }
+  .lyric-line.active{ opacity:1; transform:scale(1.04) translateY(0); color:var(--rose); text-shadow:0 0 44px rgba(226,143,160,.4); }
   .lyric-line.spoken.active{ color:var(--cream); text-shadow:none; }
   .lyric-line.passed{ opacity:.12; }
-  .lyric-line.fx-finale.active{ animation:finale-pulse 1.1s ease-in-out infinite alternate; text-shadow:0 0 46px rgba(201,162,75,.6); }
-  @keyframes finale-pulse{ 0%{transform:scale(1.03) translateY(0);} 100%{transform:scale(1.07) translateY(0);} }
+  .lyric-line.fx-finale.active{ animation:finale-pulse 1.1s ease-in-out infinite alternate; text-shadow:0 0 60px rgba(226,143,160,.65); }
+  @keyframes finale-pulse{ 0%{transform:scale(1.04) translateY(0);} 100%{transform:scale(1.09) translateY(0);} }
   @media (prefers-reduced-motion: reduce){
     .lyric-line, .lyric-line.active, .lyric-line.fx-finale.active{ transition:opacity .3s ease !important; animation:none !important; transform:none !important; }
   }
 
-  .gap-block{ min-height:60px; }
-  .gap-mark{ width:5px; height:5px; border-radius:50%; background:var(--gold); opacity:.35; }
+  .gap-block{ min-height:90px; }
+  .gap-mark{ width:6px; height:6px; border-radius:50%; background:var(--rose); opacity:.4; }
 
-  /* ---------- FLOATING CLIPART ---------- */
+  /* ---------- FLOATING CLIPART (maximalist — big, layered, tasteful) ---------- */
   .clip-float{
-    position:absolute; top:50%; width:clamp(70px, 15vw, 140px); pointer-events:none;
-    filter:drop-shadow(0 12px 22px rgba(0,0,0,.55));
-    opacity:0; z-index:2;
+    position:absolute; top:50%; width:clamp(160px, 34vw, 360px); pointer-events:none;
+    filter:drop-shadow(0 20px 36px rgba(0,0,0,.5));
+    opacity:0; z-index:1;
   }
-  .clip-float.tone-ink{ filter:drop-shadow(0 12px 22px rgba(0,0,0,.55)) sepia(.35) saturate(.7) brightness(.92); }
-  .clip-float.tone-gold{ filter:drop-shadow(0 14px 26px rgba(0,0,0,.6)) saturate(1.1); }
-  .clip-float.side-left{ left:clamp(-30px, -4vw, 0px); }
-  .clip-float.side-right{ right:clamp(-30px, -4vw, 0px); }
+  .clip-float.tone-ink{ filter:drop-shadow(0 16px 30px rgba(0,0,0,.45)) sepia(.3) saturate(.75) brightness(.95); }
+  .clip-float.depth-back{ z-index:0; filter:drop-shadow(0 10px 30px rgba(0,0,0,.35)) blur(1px) brightness(.85); }
+  .clip-float.depth-front{ z-index:2; width:clamp(120px, 22vw, 240px); }
+  .clip-float.side-left{ left:clamp(-70px, -9vw, -10px); }
+  .clip-float.side-right{ right:clamp(-70px, -9vw, -10px); }
 
   /* ---------- MODE FAB ---------- */
   #mode-fab{ position:fixed; right:1rem; bottom:1.2rem; z-index:45; padding-bottom:env(safe-area-inset-bottom); display:none; }
   #mode-fab.visible{ display:block; }
   #mode-fab button{
-    font-family:'Courier Prime',monospace; cursor:pointer; border:1px solid var(--gold);
-    padding:.65rem 1rem; font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--gold); background:rgba(11,11,12,.85); backdrop-filter:blur(10px);
+    font-family:'Cormorant Garamond',serif; font-style:italic; cursor:pointer; border:1px solid rgba(226,143,160,.5);
+    border-radius:999px;
+    padding:.7rem 1.3rem; font-size:.9rem; font-weight:600;
+    color:var(--rose); background:rgba(23,11,16,.85); backdrop-filter:blur(10px);
     box-shadow:0 10px 30px -12px rgba(0,0,0,.7); transition:transform .15s ease;
   }
   #mode-fab button:active{ transform:scale(.95); }
-  #mode-fab button.is-auto{ background:var(--gold); color:#171308; }
+  #mode-fab button.is-auto{ background:var(--rose); color:#2a0f16; border-color:var(--rose); }
 
   /* ---------- TOAST ---------- */
   #toast-root{ position:fixed; inset:0; pointer-events:none; z-index:60; display:flex; align-items:flex-end; justify-content:center; }
   .toast{
     pointer-events:auto; margin:0 1rem calc(1.4rem + env(safe-area-inset-bottom));
-    max-width:440px; width:100%;
-    background:var(--ink-2); border:1px solid var(--gold);
-    padding:1.4rem 1.5rem; box-shadow:0 30px 60px -20px rgba(0,0,0,.7);
+    max-width:460px; width:100%;
+    background:var(--ink-2); border:1px solid rgba(226,143,160,.4);
+    border-radius:22px;
+    padding:1.5rem 1.6rem; box-shadow:0 30px 60px -20px rgba(0,0,0,.7);
+    position:relative; overflow:hidden;
   }
-  .toast p{ margin:0 0 1rem; font-size:1.05rem; font-style:italic; line-height:1.5; color:var(--cream); }
-  .toast p.sub{ font-size:.85rem; font-style:normal; font-family:'Courier Prime',monospace; color:var(--text-dim); margin-top:-.6rem; }
-  .toast-actions{ display:flex; flex-direction:column; gap:.6rem; }
+  .toast::before{
+    content:''; position:absolute; top:-30px; right:-30px; width:110px; height:110px;
+    background:radial-gradient(circle, rgba(226,143,160,.25), transparent 70%);
+  }
+  .toast p{ margin:0 0 1rem; font-size:1.15rem; font-style:italic; line-height:1.5; color:var(--cream); position:relative; }
+  .toast p.sub{ font-size:.9rem; font-style:italic; color:var(--text-dim); margin-top:-.6rem; position:relative; }
+  .toast-actions{ display:flex; flex-direction:column; gap:.6rem; position:relative; }
   .toast-actions button{
-    font-family:'Courier Prime',monospace; cursor:pointer; border:1px solid var(--gold); width:100%;
-    padding:.8rem 1rem; font-size:.82rem; letter-spacing:.04em;
+    font-family:'Cormorant Garamond',serif; cursor:pointer; border:1px solid rgba(226,143,160,.5); width:100%;
+    border-radius:999px; padding:.85rem 1.1rem; font-size:.95rem; font-style:italic;
   }
-  .toast-actions .primary{ background:var(--gold); color:#171308; font-weight:700; }
+  .toast-actions .primary{ background:linear-gradient(100deg,var(--rose-deep),var(--rose)); color:#2a0f16; font-weight:700; border:none; }
   .toast-actions .secondary{ background:transparent; color:var(--cream); }
 
   /* ---------- OUTRO ---------- */
   #outro{
     min-height:90svh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.2rem;
-    text-align:center; padding:3rem 1.5rem;
-    background:radial-gradient(120% 90% at 50% 50%, rgba(201,162,75,.08), transparent 60%), var(--ink);
+    text-align:center; padding:3rem 1.5rem; position:relative; overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 50%, rgba(226,143,160,.1), transparent 60%), var(--ink);
   }
   #outro .frame-badge{ margin-bottom:.4rem; }
-  #outro h2{ font-family:'Bodoni Moda',serif; font-style:italic; font-weight:700; font-size:clamp(2.2rem,7vw,3.4rem); margin:0; }
-  #outro p{ color:var(--text-dim); max-width:420px; margin:0; font-size:1.05rem; font-style:italic; }
+  #outro h2{ font-family:'Bodoni Moda',serif; font-style:italic; font-weight:700; font-size:clamp(2.6rem,8vw,4.2rem); margin:0; position:relative; z-index:1; }
+  #outro p{ color:var(--text-dim); max-width:420px; margin:0; font-size:1.1rem; font-style:italic; position:relative; z-index:1; }
   #replay-btn{
-    margin-top:.6rem; cursor:pointer; font-family:'Courier Prime',monospace; font-weight:700; font-size:.85rem;
-    letter-spacing:.14em; text-transform:uppercase; color:var(--ink); padding:.9rem 1.9rem; border:none; background:var(--gold);
+    position:relative; z-index:1;
+    margin-top:.6rem; cursor:pointer; font-family:'Bodoni Moda',serif; font-weight:700; font-style:italic; font-size:1rem;
+    color:#2a0f16; padding:1rem 2.2rem; border:none; border-radius:999px;
+    background:linear-gradient(100deg,var(--rose-deep),var(--rose));
+    box-shadow:0 16px 34px -12px rgba(198,95,120,.55);
   }
-  #outro a{ color:var(--text-dim); font-size:.75rem; text-decoration:underline; text-underline-offset:3px; font-family:'Courier Prime',monospace; }
+  #outro a{ position:relative; z-index:1; color:var(--text-dim); font-size:.85rem; font-style:italic; text-decoration:underline; text-underline-offset:3px; }
 </style>
 </head>
 <body>
@@ -261,20 +285,24 @@
 
 <!-- ============ HERO ============ -->
 <section id="hero">
-  <div class="brand">a silent-era love song, staged by naveen</div>
+  <img class="hero-bloom" id="hero-bloom-1" alt="" loading="lazy">
+  <img class="hero-bloom" id="hero-bloom-2" alt="" loading="lazy">
+  <img class="hero-bloom" id="hero-bloom-3" alt="" loading="lazy">
+
+  <div class="brand">a love song, staged by naveen</div>
 
   <div class="hero-mid">
-    <div class="frame-badge">1910 · WALTZ TIME</div>
+    <div class="frame-badge">1910 · Waltz Time</div>
     <h1 class="title display">Let Me Call You<br>Sweetheart</h1>
     <p class="subtitle">Leo Friedman &amp; Beth Slater Whitson</p>
 
     <div class="instructions">
-      Scroll to <b>turn back the clock</b>. Try to match your scroll to the
-      waltz so the words land exactly on their note — like winding a music
-      box by hand. It's trickier than it looks.
+      Scroll to <b>bring the waltz to life</b>. Try to match your pace to
+      the music so the words bloom exactly on their note. It's trickier
+      than it looks.
     </div>
 
-    <button id="start-btn" onclick="startRide()">▶ Begin the Reel</button>
+    <button id="start-btn" onclick="startRide()">Begin the Reel</button>
   </div>
 
   <div class="scroll-hint"><span>then scroll</span><span class="chevron"></span></div>
@@ -284,13 +312,12 @@
 <div id="player-bar">
   <div class="pb-left">
     <button id="play-btn" onclick="togglePlay()">▶</button>
-    <div class="clock"><i class="hh"></i><i class="mm"></i></div>
     <div class="pb-meta">
       <div class="pb-title">Let Me Call You Sweetheart</div>
       <div class="pb-time" id="pb-time">0:00 / 0:00</div>
     </div>
   </div>
-  <div id="mode-badge" class="mode-badge">MANUAL</div>
+  <div id="mode-badge" class="mode-badge">Manual</div>
   <div id="progress-rail"><div id="progress-fill"></div></div>
 </div>
 
@@ -336,38 +363,40 @@
   const LYRICS = [
     { start: 3.10,  end: 7.60,   type:'spoken', text: "“How about some close harmony on that old love song, Let Me Call You Sweetheart?”", fx:'spoken' },
     { start: 7.80,  end: 9.00,   type:'spoken', text: "“Where's our pitch on that, Russ?”", fx:'spoken' },
-    { start: 14.70, end: 22.90,  section:'Chorus', text: "Oh, let me call you sweetheart, I'm in love with you", fx:'default', clip:'heart_arrow' },
-    { start: 22.90, end: 31.16,  text: "Let me hear you whisper that you love me too", fx:'default', clip:'envelope' },
-    { start: 35.52, end: 43.72,  text: "Keep the love light glowing in your eyes so true", fx:'default', clip:'pocketwatch' },
-    { start: 43.72, end: 58.42,  text: "Let me call you sweetheart, I'm in love with you", fx:'default', clip:'heart_lock' },
-    { start: 61.36, end: 70.60,  section:'Verse', text: "I am dreaming, dear, of you, day by day", fx:'default', clip:'moon' },
-    { start: 70.60, end: 80.34,  text: "Dreaming when the skies are blue, when they're gray", fx:'default' },
-    { start: 80.34, end: 93.38,  text: "When the silvery moonlight gleams, still I wander on in dreams", fx:'default', clip:'star' },
-    { start: 95.70, end: 101.72, text: "In a land of love, it seems", fx:'default', clip:'rose' },
-    { start: 101.72,end: 110.88, text: "Just with you, just with you", fx:'default' },
-    { start: 113.32,end: 121.24, section:'Chorus (reprise)', text: "Let me call you sweetheart, I'm in love with you", fx:'default', clip:'heart_arrow' },
-    { start: 121.24,end: 130.34, text: "Let me hear you whisper that you love me too", fx:'default', clip:'dove' },
-    { start: 134.42,end: 142.44, text: "Keep the love light glowing in your eyes so true", fx:'default', clip:'pocketwatch' },
-    { start: 144.62,end: 163.08, text: "Let me call you sweetheart, I'm in love with you", fx:'fx-finale', clip:'heart_lock' },
-    { start: 177.98,end: 179.40, section:'Outro', text: "Let me hear you whisper that you love me too…", fx:'fx-finale', clip:'ribbon2' },
+    { start: 14.70, end: 22.90,  section:'Chorus', text: "Oh, let me call you sweetheart, I'm in love with you", fx:'default', clip:['rose_red1','wildflower1'] },
+    { start: 22.90, end: 31.16,  text: "Let me hear you whisper that you love me too", fx:'default', clip:['envelope','lilac1'] },
+    { start: 35.52, end: 43.72,  text: "Keep the love light glowing in your eyes so true", fx:'default', clip:['poppy1','daisy1'] },
+    { start: 43.72, end: 58.42,  text: "Let me call you sweetheart, I'm in love with you", fx:'default', clip:['heart_lock','rose_pink'] },
+    { start: 61.36, end: 70.60,  section:'Verse', text: "I am dreaming, dear, of you, day by day", fx:'default', clip:['moon','wildflower2'] },
+    { start: 70.60, end: 80.34,  text: "Dreaming when the skies are blue, when they're gray", fx:'default', clip:['lilac2'] },
+    { start: 80.34, end: 93.38,  text: "When the silvery moonlight gleams, still I wander on in dreams", fx:'default', clip:['star','hydrangea'] },
+    { start: 95.70, end: 101.72, text: "In a land of love, it seems", fx:'default', clip:['rose_red2'] },
+    { start: 101.72,end: 110.88, text: "Just with you, just with you", fx:'default', clip:['blossom','wildflower3'] },
+    { start: 113.32,end: 121.24, section:'Chorus (reprise)', text: "Let me call you sweetheart, I'm in love with you", fx:'default', clip:['rose_red1','daisy2'] },
+    { start: 121.24,end: 130.34, text: "Let me hear you whisper that you love me too", fx:'default', clip:['dove','envelope'] },
+    { start: 134.42,end: 142.44, text: "Keep the love light glowing in your eyes so true", fx:'default', clip:['poppy2','carnation'] },
+    { start: 144.62,end: 163.08, text: "Let me call you sweetheart, I'm in love with you", fx:'fx-finale', clip:['heart_lock','rose_mono','bouquet2'] },
+    { start: 177.98,end: 179.40, section:'Outro', text: "Let me hear you whisper that you love me too…", fx:'fx-finale', clip:['ribbon2','blossom'] },
   ];
 
   // clip art staged into the instrumental gaps between vocal lines, keyed by
   // the gap's start time (seconds) — these are the quiet, purely-orchestral
   // stretches where there's no lyric competing for attention
   const GAP_CLIPS = {
-    "9.00":   { clip:'typewriter', label:null },
-    "31.16":  { clip:'star',       label:null },
-    "58.42":  { clip:'dove',       label:null },
-    "93.38":  { clip:'splatter',   label:null },
-    "110.88": { clip:'ribbon2',    label:null },
-    "130.34": { clip:'cog',        label:null },
-    "163.08": { clip:'filmstrip',  label:'The Orchestra Plays', extra:['camera','clapperboard','bowler_hat'] },
+    "9.00":   { clip:['old_paper'], label:null },
+    "31.16":  { clip:['star'],      label:null },
+    "58.42":  { clip:['dove','lilac1'], label:null },
+    "93.38":  { clip:['hydrangea'], label:null },
+    "110.88": { clip:['ribbon2','poppy1'], label:null },
+    "130.34": { clip:['wildflower1'], label:null },
+    "163.08": { clip:['bouquet2','rose_pink'], label:'The Garden Blooms', extra:['carnation','lilac2','daisy1'] },
   };
 
-  const CLIP_TONE = {
-    pocketwatch:'gold', splatter:'gold', old_paper:'gold',
-  };
+  // pool used to keep every remaining line generously floral even without a
+  // hand-picked cue above — true maximalism means nothing scrolls by bare
+  const AMBIENT_POOL = ['rose_pink','rose_red2','lilac1','lilac2','daisy1','daisy2','poppy1','wildflower2','wildflower3','hydrangea','blossom','carnation'];
+  let ambientCursor = 0;
+  function nextAmbient(){ return AMBIENT_POOL[(ambientCursor++) % AMBIENT_POOL.length]; }
 
   /* ---------------------------------------------------------------------
    * TIMELINE — auto-fills instrumental gaps so scroll-height always maps
@@ -407,8 +436,6 @@
   const modeFabBtn = document.getElementById('mode-fab-btn');
   const toastRoot = document.getElementById('toast-root');
   const iris = document.getElementById('iris');
-  const clockHH = document.querySelector('.clock .hh');
-  const clockMM = document.querySelector('.clock .mm');
 
   let mode = 'manual';
   let started = false;
@@ -455,8 +482,10 @@
           block.appendChild(mark);
         }
         if (gapCue){
-          placeClipart(block, gapCue.clip, 0);
-          (gapCue.extra || []).forEach((name, i) => placeClipart(block, name, i + 1));
+          gapCue.clip.forEach((name, i) => placeClipart(block, name, i));
+          (gapCue.extra || []).forEach((name, i) => placeClipart(block, name, gapCue.clip.length + i));
+        } else {
+          placeClipart(block, nextAmbient(), 0);
         }
         lyricsEl.appendChild(block);
         return;
@@ -476,7 +505,8 @@
       line.textContent = entry.text;
       block.appendChild(line);
 
-      if (entry.clip) placeClipart(block, entry.clip, 0);
+      const clips = entry.clip && entry.clip.length ? entry.clip : (entry.fx === 'spoken' ? [] : [nextAmbient()]);
+      clips.forEach((name, i) => placeClipart(block, name, i));
 
       lyricsEl.appendChild(block);
       lyricEls.push({ el: line, start: entry.start, end: entry.end });
@@ -488,35 +518,37 @@
    * GSAP ScrollTrigger so entrances/exits are driven by scroll position —
    * meaning they work identically whether a human or auto-mode is scrolling.
    * ------------------------------------------------------------------- */
+  const INK_TONE = new Set(['rose_mono','heart_arrow','heart_lock','dove','star','ribbon2','moon']);
   let clipSideToggle = 0;
   function placeClipart(block, name, offset){
     const side = (clipSideToggle++ % 2 === 0) ? 'left' : 'right';
+    const depth = offset % 2 === 0 ? 'front' : 'back';
     const img = document.createElement('img');
     img.src = 'assets/clipart/' + name + '.png';
     img.alt = '';
     img.loading = 'lazy';
-    img.className = 'clip-float side-' + side + ' tone-' + (CLIP_TONE[name] || 'ink');
-    img.style.top = (40 + offset * 18) + '%';
-    if (offset > 0) img.style.width = 'clamp(50px, 10vw, 90px)';
+    img.className = 'clip-float side-' + side + ' depth-' + depth + (INK_TONE.has(name) ? ' tone-ink' : '');
+    img.style.top = (28 + offset * 22) + '%';
     block.appendChild(img);
+    const maxOpacity = depth === 'back' ? 0.6 : 1;
 
     if (!hasGSAP){
       // graceful fallback: plain CSS fade-in via IntersectionObserver, no choreography
       img.style.transition = 'opacity .6s ease, transform .6s ease';
       img.style.transform = 'none';
       const io = new IntersectionObserver((entries) => {
-        entries.forEach(e => { img.style.opacity = e.isIntersecting ? '1' : '0'; });
+        entries.forEach(e => { img.style.opacity = e.isIntersecting ? String(maxOpacity) : '0'; });
       }, { threshold: 0.15 });
       io.observe(block);
       return;
     }
 
     const dir = side === 'left' ? -1 : 1;
-    const tilt = (Math.random() * 16 - 8) + dir * 4;
-    gsap.set(img, { xPercent: dir * 130, opacity: 0, rotate: tilt * 2, scale: .85 });
+    const tilt = (Math.random() * 14 - 7) + dir * 5;
+    gsap.set(img, { xPercent: dir * 130, opacity: 0, rotate: tilt * 2.2, scale: .8 });
 
     const tl = gsap.timeline({ paused:true })
-      .to(img, { xPercent:0, opacity:1, rotate:tilt, scale:1, duration:1, ease:'back.out(1.5)' });
+      .to(img, { xPercent:0, opacity:maxOpacity, rotate:tilt, scale:1, duration:1.1, ease:'back.out(1.4)' });
 
     ScrollTrigger.create({
       trigger: block,
@@ -578,10 +610,6 @@
     pbTime.textContent = fmt(t) + ' / ' + fmt(TOTAL_DURATION);
     const frac = clamp(t / TOTAL_DURATION, 0, 1);
     progressFill.style.width = (frac * 100) + '%';
-    if (clockHH && clockMM){
-      clockMM.style.transform = 'rotate(' + (frac * 360 * 6) + 'deg)';
-      clockHH.style.transform = 'rotate(' + (frac * 360 * 0.5) + 'deg)';
-    }
   }
 
   function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
@@ -762,6 +790,27 @@
   }
 
   /* ---------------------------------------------------------------------
+   * HERO BLOOMS — big, soft, first thing the page shows
+   * ------------------------------------------------------------------- */
+  function setupHeroBlooms(){
+    const heroFlowers = [
+      { id: 'hero-bloom-1', name: 'rose_red1', delay: .1 },
+      { id: 'hero-bloom-2', name: 'lilac1',    delay: .3 },
+      { id: 'hero-bloom-3', name: 'wildflower3', delay: .5 },
+    ];
+    heroFlowers.forEach(({ id, name, delay }) => {
+      const el = document.getElementById(id);
+      el.src = 'assets/clipart/' + name + '.png';
+      if (hasGSAP){
+        gsap.fromTo(el, { opacity:0, y:26, scale:.92 }, { opacity:1, y:0, scale:1, duration:1.3, delay, ease:'power2.out' });
+      } else {
+        el.style.transition = 'opacity 1s ease ' + delay + 's, transform 1s ease ' + delay + 's';
+        requestAnimationFrame(() => { el.style.opacity = '1'; });
+      }
+    });
+  }
+
+  /* ---------------------------------------------------------------------
    * BOOT
    * ------------------------------------------------------------------- */
   window.startRide = startRide;
@@ -769,6 +818,7 @@
   window.toggleModeFab = toggleModeFab;
   window.replay = replay;
 
+  setupHeroBlooms();
   buildLyrics();
   window.addEventListener('load', () => { computeBounds(); if (hasGSAP) ScrollTrigger.refresh(); });
   window.addEventListener('resize', () => { computeBounds(); if (hasGSAP) ScrollTrigger.refresh(); });

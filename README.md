@@ -1,10 +1,11 @@
 # Let Me Call You Sweetheart — An Interactive Lyric Sync
 
-A single-page, mobile-first interactive lyric video staged like a 1930s
-silent-film title card, built around a genuinely public-domain 1910 love
-song. Tap **Begin the Reel**, then scroll to try to keep the lyrics in
-sync with the waltz yourself. It's genuinely hard to nail by hand — after
-a bit of struggling, the page calls it out and offers to take over:
+A single-page, mobile-first interactive lyric video — huge bold serif
+typography over a maximalist wash of real vintage botanical flower
+illustrations — built around a genuinely public-domain 1910 love song.
+Tap **Begin the Reel**, then scroll to try to keep the lyrics in sync
+with the waltz yourself. It's genuinely hard to nail by hand — after a
+bit of struggling, the page calls it out and offers to take over:
 
 > "Hey — you can't really enjoy the song if you keep trying to figure out
 > the perfect sync. Lemme just do that for you."
@@ -21,18 +22,21 @@ a bit of struggling, the page calls it out and offers to take over:
   [faster-whisper](https://github.com/SYSTRAN/faster-whisper) directly on
   that recording — it's transcription-grounded to the actual waveform,
   not guessed.
-- **Real clip art, properly matted.** Every illustration in
-  `assets/clipart/` is a CC0 vintage engraving sourced via
+- **Real flowers, properly matted.** Every illustration in
+  `assets/clipart/` is a CC0 vintage botanical illustration (roses,
+  lilacs, poppies, hydrangea, wildflower sprays…) sourced via
   [Openverse](https://openverse.org). The as-served files had a
   checkerboard baked into the pixels as a fake "transparency" preview; a
   local script reconstructed genuine alpha (luminance threshold +
   border-connected flood fill) before they were saved into the repo. See
-  `ATTRIBUTION.md` for full sourcing.
-- **A visual system built around the theme, not against it.** Bodoni
-  Moda / Cormorant Garamond / Courier Prime typography, procedural film
-  grain + vignette, an iris-wipe open, and a literal ticking clock in the
-  player bar — because a song about time, staged like *Modern Times*,
-  should look like it.
+  `ATTRIBUTION.md` for full sourcing — including why a stock-photo
+  reference image handed to this project was deliberately *not* used
+  (visible Dreamstime watermark = not rights-clear).
+- **A visual system built to feel warm, not like a dashboard.** Bodoni
+  Moda + Cormorant Garamond typography (no monospace UI chrome), a
+  blush/rose-gold palette, pill-shaped buttons, procedural film grain +
+  vignette, and an iris-wipe open — flowers do the maximalist work, the
+  UI stays out of their way.
 
 ## The math (the part that actually matters)
 
