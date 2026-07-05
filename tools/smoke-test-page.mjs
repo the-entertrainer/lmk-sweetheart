@@ -17,6 +17,7 @@ const SHOTS = [
   [16.2, 'chorus-typing'],
   [21, 'chorus-full'],
   [38, 'love-light'],
+  [47, 'chorus-b'],
   [65, 'dreaming'],
   [86, 'moonlight'],
   [99, 'land-of-love'],
@@ -26,7 +27,7 @@ const SHOTS = [
 
 async function main(){
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-  const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 2 });
+  const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: process.env.SMOKE_MOBILE ? 3 : 2 });
   const errors = [];
   page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
   page.on('pageerror', err => { errors.push(String(err)); console.error('[pageerror]', err); });

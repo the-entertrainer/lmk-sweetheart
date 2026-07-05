@@ -82,13 +82,13 @@ export const CAPTION = {
  */
 export const SCENES = [
   { id:'intro', enter:0, hue:6, warmth:0.55,
-    anchor:{ img:'vinyl.png', w:50, x:0, rot:-8, kiss:0, overlap:2 },
+    anchor:{ img:'vinyl.png', w:64, x:0, rot:-8, kiss:0, overlap:2 },
     slots:[
       { type:'spoken', line:0 },
       { type:'spoken', line:1 },
     ] },
   { id:'chorus-a', enter:13.4, hue:8, warmth:0.6,
-    anchor:{ img:'gramophone.png', w:78, x:-4, rot:0, kiss:3, overlap:7 },
+    anchor:{ img:'gramophone.png', w:82, x:-4, rot:0, kiss:3, overlap:7 },
     slots:[
       { type:'headline', line:2, from:0, to:4 },   // Oh, let me call you
       { type:'script',   line:2, from:5, to:5 },   // sweetheart
@@ -96,21 +96,21 @@ export const SCENES = [
       { type:'sub',      line:3, from:0, to:9 },   // Let me hear you whisper that you love me too
     ] },
   { id:'love-light', enter:34.22, hue:12, warmth:0.65,
-    anchor:{ img:'candle.png', w:22, x:8, rot:0, kiss:0, overlap:0 },
+    anchor:{ img:'candle.png', w:40, x:6, rot:0, kiss:0, overlap:0 },
     slots:[
       { type:'headline', line:4, from:0, to:3 },   // Keep the love light
       { type:'script',   line:4, from:4, to:4 },   // glowing
       { type:'sub',      line:4, from:5, to:9 },   // in your eyes so true
     ] },
   { id:'chorus-b', enter:43.32, hue:9, warmth:0.62,
-    anchor:{ img:'rotary-phone.png', w:54, x:2, rot:0, kiss:0, overlap:5 },
+    anchor:{ img:'rotary-phone.png', w:92, x:0, rot:0, kiss:0, overlap:6 },
     slots:[
       { type:'headline', line:5, from:0, to:3 },   // Let me call you
       { type:'script',   line:5, from:4, to:4 },   // sweetheart
       { type:'sub',      line:5, from:5, to:9 },   // I'm in love with you
     ] },
   { id:'dreaming', enter:60.06, hue:14, warmth:0.58,
-    anchor:{ img:'dove.png', w:44, x:4, rot:0, kiss:0, overlap:0 },
+    anchor:{ img:'dove.png', w:76, x:2, rot:0, kiss:0, overlap:0 },
     slots:[
       { type:'headline', line:6, from:0, to:2 },   // I am dreaming
       { type:'script',   line:6, from:3, to:3 },   // dear
@@ -118,14 +118,14 @@ export const SCENES = [
       { type:'sub',      line:7, from:0, to:8 },   // Dreaming when the skies are blue...
     ] },
   { id:'moonlight', enter:79.94, hue:5, warmth:0.5,
-    anchor:{ img:'pearl-necklace.png', w:62, x:0, rot:0, kiss:0, overlap:0 },
+    anchor:{ img:'pearl-necklace.png', w:82, x:0, rot:0, kiss:0, overlap:0 },
     slots:[
       { type:'headline', line:8, from:0, to:2 },   // When the silvery
       { type:'script',   line:8, from:3, to:3 },   // moonlight
       { type:'sub',      line:8, from:4, to:10 },  // gleams, still I wander on in dreams
     ] },
   { id:'land-of-love', enter:94.4, hue:12, warmth:0.68,
-    anchor:{ img:'typewriter.png', w:54, x:0, rot:0, kiss:0, overlap:5 },
+    anchor:{ img:'typewriter.png', w:84, x:0, rot:0, kiss:0, overlap:6 },
     slots:[
       { type:'headline', line:9, from:0, to:3 },   // In a land of
       { type:'script',   line:9, from:4, to:4 },   // love
@@ -133,7 +133,7 @@ export const SCENES = [
       { type:'sub',      line:10, from:0, to:5 },  // Just with you, just with you
     ] },
   { id:'chorus-reprise', enter:112.02, hue:9, warmth:0.66,
-    anchor:{ img:'rose-bouquet.png', w:48, x:-2, rot:0, kiss:0, overlap:2 },
+    anchor:{ img:'rose-bouquet.png', w:60, x:-2, rot:0, kiss:0, overlap:2 },
     slots:[
       { type:'headline', line:11, from:0, to:3 },  // Let me call you
       { type:'script',   line:11, from:4, to:4 },  // sweetheart
@@ -141,14 +141,14 @@ export const SCENES = [
       { type:'sub',      line:12, from:0, to:9 },  // Let me hear you whisper that you love me too
     ] },
   { id:'love-light-2', enter:133.12, hue:13, warmth:0.72,
-    anchor:{ img:'ring.png', w:34, x:0, rot:0, kiss:0, overlap:0 },
+    anchor:{ img:'ring.png', w:50, x:0, rot:0, kiss:0, overlap:0 },
     slots:[
       { type:'headline', line:13, from:0, to:3 },  // Keep the love light
       { type:'script',   line:13, from:4, to:4 },  // glowing
       { type:'sub',      line:13, from:5, to:9 },  // in your eyes so true
     ] },
   { id:'finale', enter:143.32, hue:16, warmth:0.85,
-    anchor:{ img:'gramophone.png', w:76, x:-4, rot:0, kiss:3, overlap:7 },
+    anchor:{ img:'gramophone.png', w:80, x:-4, rot:0, kiss:3, overlap:7 },
     slots:[
       { type:'headline', line:14, from:0, to:3 },  // Let me call you
       { type:'script',   line:14, from:4, to:4 },  // sweetheart

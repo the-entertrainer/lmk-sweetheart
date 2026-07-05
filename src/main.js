@@ -234,9 +234,13 @@ async function main(){
 
   // Script words: a continuous ink-wipe across each word's real sung
   // window (plus a little grace so a fast word still writes gracefully).
-  function renderScriptWipes(t){
+  // Settled words (fully written or not yet started) are skipped so the
+  // per-frame style churn stays limited to the one active word.
+  function renderScriptWipes(t, force = false){
     for (const w of scriptWipes){
       const p = Math.min(Math.max((t - w.s) / (w.e - w.s), 0), 1);
+      if (!force && p === w.lastP) continue;
+      w.lastP = p;
       w.el.style.clipPath = `inset(-20% ${((1 - p) * 104).toFixed(2)}% -20% -2%)`;
     }
   }
@@ -249,8 +253,8 @@ async function main(){
     lastNow = now;
     const t = audio.currentTime;
     sheet.sequence.position = t;
-    renderLetters(t, t < lastT - 0.05);
-    renderScriptWipes(t);
+    renderLetters(t, t < lastT - 0.5);
+    renderScriptWipes(t, t < lastT - 0.5);
     lastT = t;
     updateParallax(t, dt);
     progressFill.style.width = (t / TOTAL_DURATION * 100).toFixed(2) + '%';
