@@ -80,20 +80,25 @@ close to the centered text column each one is allowed to drift).
 
 | File | Adobe Stock ID | Search term | Used for |
 |---|---|---|---|
-| `gramophone.png` | — ([OnlyGFX](https://www.onlygfx.com/vintage-gramophone-png-transparent/), free for personal + commercial use, no attribution required) | — | "that old love song" spoken intro; finale reprise |
-| `vinyl.png` | 566623398 | vinyl record isolated on white | before the singing starts; outro |
-| `rotary-phone.png` | 292444167 | old black rotary telephone isolated | "let me call you sweetheart" |
-| `rose.png` | 301702947 | red rose isolated | chorus A; finale pulsing heartbeat |
-| `ring.png` | 174404055 | diamond engagement wedding ring isolated | "keep the love light glowing"; finale |
-| `rose-bouquet.png` | 449968571 | bunch of rosy roses isolated | chorus A background; reprise "love light glowing" |
-| `dove.png` | 132973260 | white dove flying symbol of love | into the dreaming verse |
-| `candle.png` | 76945172 | retro candlestick with candle isolated | dreaming verse |
-| `pearl-necklace.png` | 130138331 | white pearl necklace | moonlit verse; finale |
-| `key.png` | 373681935 | old key isolated, clipping path | moonlit verse |
-| `love-letter.png` | 611879443 | vintage craft envelope with red wax seal | "just with you" -> reprise |
-| `camera.png` | 552059051 | vintage camera isolated on white | reprise chorus |
-| `typewriter.png` | 252116692 | old retro vintage typewriter, black | finale |
-| `watch.png` | 315464404 | vintage pocket watch isolated on white | finale ("forever") |
+| `gramophone.png` | — ([OnlyGFX](https://www.onlygfx.com/vintage-gramophone-png-transparent/), free for personal + commercial use, no attribution required) | — | chorus + finale poster anchor — the reference design's own object |
+| `vinyl.png` | 566623398 | vinyl record isolated on white | intro poster anchor |
+| `rotary-phone.png` | 292444167 | old black rotary telephone isolated | chorus B anchor ("let me call you") |
+| `rose.png` | 301702947 | red rose isolated | finale card |
+| `ring.png` | 174404055 | diamond engagement wedding ring isolated | "keep the love light glowing" (reprise) anchor; finale card |
+| `rose-bouquet.png` | 449968571 | bunch of rosy roses isolated | chorus-reprise anchor |
+| `dove.png` | 132973260 | white dove flying symbol of love | dreaming-verse anchor |
+| `candle.png` | 76945172 | retro candlestick with candle isolated | "keep the love light glowing" anchor |
+| `pearl-necklace.png` | 130138331 | white pearl necklace | moonlight-verse anchor ("silvery"); finale card |
+| `typewriter.png` | 252116692 | old retro vintage typewriter, black | "in a land of love" anchor (love letters) |
+| `key.png` | 373681935 | old key isolated, clipping path | (licensed; unused in the current posters) |
+| `camera.png` | 552059051 | vintage camera isolated on white | (licensed; unused in the current posters) |
+| `watch.png` | 315464404 | vintage pocket watch isolated on white | (licensed; unused in the current posters) |
+
+One additionally-licensed cutout (`love-letter.png`, Adobe Stock 611879443)
+was removed: its background removal kept the whole rectangular flat-lay
+rather than isolating the envelope, so it read as a pasted photo rectangle
+instead of a cutout. Removing it (and swapping the typewriter in for the
+"land of love" poster) was cheaper than fighting the mask.
 
 Licensed via Adobe Stock's free tier (`asset_search` +
 `asset_license_and_download_stock`) and cut out with
@@ -112,17 +117,27 @@ flat colored-icon look.
 
 ## Fonts
 
-- **Baloo 2** (Ek Type) — the bold, rounded display face used for the main
-  lyric type, matching the reference's chunky rounded headline treatment.
-- **Caveat** (Pablo Impallari) — the loose brush-script face used only for
-  the word "sweetheart" itself and the finale's "with love," echoing the
-  reference's one deliberate second typeface rather than a whole second
-  type system.
-- **Inter** — small UI labels (section tags).
+- **Titan One** (Rodrigo Fuenzalida) — the fat retro display face for the
+  headline type, matched to the reference's chunky letterforms.
+- **Cookie** (Ania Kruk) — the connected script for "sweetheart" / the
+  scene key words and the finale's "with love." Because it's a connected
+  script, it reveals via a clip-path ink wipe rather than per-letter spans
+  (splitting letters would break the cursive joins).
+- **Oswald** — the pinned caption and spoken/whispered lines.
 
-All three via Google Fonts (SIL Open Font License).
+All three SIL Open Font License, self-hosted as latin-subset woff2 files in
+`public/fonts/` (downloaded from Google Fonts) — no external font request
+at runtime.
 
-## What changed from the previous build
+## Design model
+
+The poster-scene structure (fixed composition per song section, typewriter
+word accumulation, one photographic anchor per poster, script keyword,
+pinned caption) is a direct implementation of the sender's own Canva
+reference animation, reconstructed frame-by-frame from the shared video
+(`ffmpeg` frame extraction). The caption line is their copy, verbatim.
+
+## What changed from the previous builds
 
 The prior iteration of this page used three procedurally-authored Three.js
 glass objects (a heart, an abstracted bloom, a ribbon) and a curated set of

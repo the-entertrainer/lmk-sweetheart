@@ -6,13 +6,17 @@ Three.js / Vite project, not just this one.
 
 ## What this project is
 
-A single-page, one-button lyric video for a public-domain 1910 song.
-Everything is real: real word-level audio timestamps (faster-whisper), a
-real Theatre.js keyframe sequence for all motion, real (procedurally
-authored) Three.js glass geometry. See `README.md` for the architecture and
-`ATTRIBUTION.md` for every asset's source. Read `src/lyrics-data.mjs` first
-— it's the single source of truth that both the runtime page and the
-Theatre-state build script import from.
+A single-page, one-button lyric page for a public-domain 1910 song,
+currently built as "poster scenes" matched to the sender's own Canva
+reference (see Update 2 at the bottom — read it before touching the visual
+design). Everything is real: real word-level audio timestamps
+(faster-whisper), a real Theatre.js keyframe sequence for every tweened
+value, real licensed photographic cutouts. See `README.md` for the
+architecture and `ATTRIBUTION.md` for every asset's source. Read
+`src/lyrics-data.mjs` first — it's the single source of truth that both the
+runtime page and the Theatre-state build script import from. (The Three.js
+sections below describe earlier iterations that no longer ship — kept
+because the lessons are real; the current build is DOM + CSS only.)
 
 ## Theatre.js — advanced patterns learned this session
 
@@ -263,3 +267,60 @@ before starting a similar rebuild:
   but don't carry over a multi-axis `font-variation-settings` string from
   one font to a different one without checking which axes the new font
   actually has — it's dead weight at best and confusing to read at worst.
+
+## Update 2: the poster-scene rebuild (what the reference actually meant)
+
+The parallax-photo-layers build above was still rejected — "nothing like
+the sample." The miss wasn't palette or assets; it was the **animation
+model**. Dense frame extraction of the reference (30 frames at 6fps, plus
+full-res crops of each type block) showed a *fixed poster* that builds in
+once and holds: caption pinned top, fat display type accumulating
+word-by-word (typewriter), ONE anchor object rising into place and
+staying, a script keyword inking itself across the lower third. Nothing
+ever flies through the frame. Lessons:
+
+- **Identify the animation model before the aesthetics.** Palette, fonts
+  and imagery can all be right and the design still reads as wrong if
+  content *moves through* the screen when the reference *composes onto* a
+  still poster. Extract enough frames to answer: what builds in, what
+  holds, what never moves — and pick the DOM/animation architecture from
+  that, not from the previous build's structure.
+- **A karaoke page maps onto a poster reference by accumulation**: each
+  song section is one poster; its words type on (per-letter timestamps
+  derived from each word's real sung start/duration) and *stay*; the next
+  section crossfades to the next poster. ~10 posters ≈ 10 anchors across a
+  3-minute song without any single screen being busy.
+- **Connected script fonts can't be revealed per-letter.** Splitting
+  Cookie/Pacifico-style scripts into letter spans breaks the cursive
+  joins/ligatures. Reveal the intact word with an animated `clip-path:
+  inset(...)` wipe instead — reads as handwriting and preserves shaping.
+  (Chunky display + caption faces don't connect, so per-letter
+  `visibility` toggles are fine there — and instant visibility pops read
+  more "typewriter" than opacity fades.)
+- **Match fonts from letterform evidence, not vibes**: full-res crops of
+  the reference type made it obvious the headline was a Titan One-class
+  fat blob display (tiny counters) and the script a Cookie-class bouncy
+  monoline — the Baloo 2 / Caveat pairing from the previous pass was a
+  category error (soft-rounded vs fat-retro; brush italic vs connected
+  upright script).
+- **Self-host fonts when smoke-testing headlessly.** This sandbox's
+  Playwright browser can't reach any external host, so Google-Fonts-linked
+  typography silently renders as fallback in every screenshot — you cannot
+  visually verify type you didn't self-host. Downloading the latin woff2
+  subsets (curl the css2 URL with a browser UA, grep the urls) into
+  `public/fonts/` fixed verification *and* removed a production runtime
+  dependency.
+- **`margin-top` percentages resolve against container WIDTH.** A
+  width-relative top margin that looks fine on a desktop column collides
+  with a pinned header on a tall-narrow phone. Use `dvh` units for
+  vertical rhythm in a portrait-first layout.
+- **Check every background-removal result against its alpha channel**
+  (`ffmpeg -vf alphaextract`): one Stock photo (a flat-lay of envelopes)
+  came back as a full rectangle because "the subject" filled the frame —
+  it read as a pasted photo. Swapping the asset beat fighting the mask.
+- **Pointer parallax via two CSS variables** (`--px`/`--py` lerped in the
+  RAF loop; each layer multiplies them at its own rate inside its
+  `transform`) gives believable depth with zero WebGL — Three.js was
+  removed entirely in this build (bundle 680 KB → 118 KB) because the
+  reference had no 3D and DOM text/images composite better than canvas
+  sprites layered under text.

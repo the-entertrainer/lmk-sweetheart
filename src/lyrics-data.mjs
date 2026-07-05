@@ -10,11 +10,15 @@
  * Theatre.js keyframes from it) and src/main.js (which plays it back), so
  * the two never drift apart.
  *
- * Visual direction: a vintage sunset palette (brick red -> orange -> gold),
- * kinetic display type, and a continuous stream of real photographic
- * cutouts (`PHOTO_LAYERS`) drifting through the scene in parallax depth —
- * every object contextually tied to the moment it appears in, cycling
- * through the whole song rather than sitting in three isolated windows.
+ * Visual model — "poster scenes", set by the user's own Canva reference
+ * video: the song divides into SCENES at section boundaries. Each scene is
+ * a fixed poster composition that BUILDS IN ONCE and HOLDS — a small
+ * pinned caption, chunky display type accumulating word-by-word as the
+ * words are actually sung (typewriter-style, nothing ever flies through),
+ * one large photographic anchor object that rises into place and stays,
+ * the word "sweetheart" (or the scene's emotional keyword) drawing itself
+ * in script across the lower third, and a few thin line doodles. At the
+ * next section the poster crossfades to the next one.
  */
 
 export const TOTAL_DURATION = 179.4; // ffprobe-measured file duration
@@ -45,118 +49,135 @@ export function assetPath(name){
   return `assets/photo/${name}`;
 }
 
-/**
- * A continuous stream of photographic cutouts drifting through the scene
- * in parallax depth, each one contextually chosen for the moment it
- * occupies (a rotary phone for "let me call you", a dove for the dreaming
- * verse, a pocket watch for the finale) rather than three isolated hero
- * windows. `depth` selects a tier from DEPTH_TIERS in
- * tools/build-theatre-state.mjs, which controls how big, how fast, and
- * how far it drifts — near+fast in the foreground, far+slow in the back.
- */
-export const PHOTO_LAYERS = [
-  { asset:'gramophone.png',    start:3.0,   end:14.7,   depth:'mid'  }, // "that old love song" — the actual reference image
-  { asset:'vinyl.png',         start:9.5,   end:16.0,   depth:'near' }, // the record spinning up before the singing starts
-  { asset:'rotary-phone.png',  start:16.0,  end:24.0,   depth:'near' }, // "let me call you sweetheart"
-  { asset:'rose.png',          start:24.0,  end:35.0,   depth:'mid'  },
-  { asset:'ring.png',          start:35.5,  end:43.0,   depth:'near' }, // "keep the love light glowing"
-  { asset:'rose-bouquet.png',  start:43.0,  end:58.42,  depth:'far'  },
-  { asset:'dove.png',          start:58.42, end:70.0,   depth:'mid'  }, // into the dreaming verse
-  { asset:'candle.png',        start:70.6,  end:79.0,   depth:'near' },
-  { asset:'pearl-necklace.png',start:79.0,  end:95.7,   depth:'far'  },
-  { asset:'key.png',           start:95.7,  end:108.0,  depth:'mid'  },
-  { asset:'love-letter.png',   start:108.0, end:116.0,  depth:'near' }, // "just with you" -> reprise
-  { asset:'camera.png',        start:116.0, end:128.0,  depth:'mid'  },
-  { asset:'rose-bouquet.png',  start:128.0, end:140.0,  depth:'near' }, // "love light glowing", reprised
-  { asset:'gramophone.png',    start:142.0, end:158.0,  depth:'mid'  }, // finale, full circle
-  { asset:'typewriter.png',    start:144.62,end:160.0,  depth:'far'  },
-  { asset:'watch.png',         start:158.0, end:172.0,  depth:'near' }, // forever
-  { asset:'vinyl.png',         start:163.0, end:179.4,  depth:'mid'  },
-];
-
-/**
- * Depth tiers for the parallax photo layers — shared between
- * tools/build-theatre-state.mjs (which uses `driftX`/`opacity` to author
- * the drift keyframes) and src/main.js (which uses `z`/`screenFrac` to turn
- * the authored fraction values into real world-space sprite size/position
- * via the camera's live frustum). Near = closer to camera, bigger, faster,
- * more opaque; far = smaller, slower, fainter — the classic multiplane
- * parallax trick, just with real photos instead of hand-drawn layers.
- */
-/**
- * `laneInner`/`laneOuter` bound each layer to one lateral "lane" (left of
- * center or right of center, picked per layer) rather than a symmetric
- * ±range through the middle: every tier's `laneInner` stays clear of the
- * centered text column (see #stack max-width in src/style.css), and only
- * `laneOuter` differs — near layers get a wide, dramatic sweep close to
- * the screen edge; far layers stay in a narrower band nearer the column.
- */
-export const DEPTH_TIERS = {
-  near: { z: 3.4,  screenFrac: 0.34, laneInner: 0.4,  laneOuter: 1.05, opacity: 0.95 },
-  mid:  { z: 0,    screenFrac: 0.23, laneInner: 0.37, laneOuter: 0.8,  opacity: 0.85 },
-  far:  { z: -3.4, screenFrac: 0.16, laneInner: 0.35, laneOuter: 0.6,  opacity: 0.55 },
+// The permanent caption pinned at the top of every poster — the sender's
+// own aside, taken verbatim from their reference design. It types on at
+// the very start and never leaves.
+export const CAPTION = {
+  text: "(SENDING YOU THIS AS I DON'T KNOW HOW TO FLIRT)",
+  start: 0.6,
+  end: 2.6,
 };
 
 /**
- * Thin outline "doodle" accents (Lucide, MIT-licensed SVGs — see
- * src/doodles/ and ATTRIBUTION.md), scattered near the photo layers the
- * way the reference design uses them: sparse, cream-colored, decorative
- * punctuation rather than a second layer of imagery.
+ * The poster scenes. `enter` is when the scene's crossfade begins —
+ * computed as max(previous line's end - 0.4, own first word - 1.3) so a
+ * still-being-sung word is never cut off, but the poster is standing
+ * before its first word arrives. A scene holds until the next scene's
+ * `enter` (the last until TOTAL_DURATION).
+ *
+ * `anchor` is the scene's one large photographic cutout: which file, its
+ * width as % of the poster column, x offset (% of column, from center),
+ * `y` its bottom position as % of poster height, and a resting tilt.
+ *
+ * `slots` map word ranges of LYRICS lines onto the poster's fixed text
+ * areas — 'headline' (chunky display, upper third), 'script' (the flowing
+ * script word over the anchor's base), 'sub' (smaller lines in the gold
+ * lower area), 'spoken' (small caps, intro banter / whispered outro).
+ * Words accumulate as sung; nothing is ever removed until the scene ends.
  */
-export const DOODLE_LAYERS = [
-  { icon:'sparkle',  start:9.5,   end:22.9  },
-  { icon:'heart',    start:22.9,  end:43.72 },
-  { icon:'star',     start:58.42, end:80.34 },
-  { icon:'sparkles', start:95.7,  end:116.0 },
-  { icon:'heart',    start:121.24,end:142.44},
-  { icon:'sparkle',  start:144.62,end:163.08},
-  { icon:'x',        start:163.08,end:179.4 },
+export const SCENES = [
+  { id:'intro', enter:0, hue:6, warmth:0.55,
+    anchor:{ img:'vinyl.png', w:48, x:0, y:30, rot:-8 },
+    slots:[
+      { type:'spoken', line:0 },
+      { type:'spoken', line:1 },
+    ] },
+  { id:'chorus-a', enter:13.4, hue:8, warmth:0.6,
+    anchor:{ img:'gramophone.png', w:76, x:-5, y:21, rot:0 },
+    slots:[
+      { type:'headline', line:2, from:0, to:4 },   // Oh, let me call you
+      { type:'script',   line:2, from:5, to:5 },   // sweetheart
+      { type:'sub',      line:2, from:6, to:10 },  // I'm in love with you
+      { type:'sub',      line:3, from:0, to:9 },   // Let me hear you whisper that you love me too
+    ] },
+  { id:'love-light', enter:34.22, hue:12, warmth:0.65,
+    anchor:{ img:'candle.png', w:26, x:10, y:34, rot:0 },
+    slots:[
+      { type:'headline', line:4, from:0, to:3 },   // Keep the love light
+      { type:'script',   line:4, from:4, to:4 },   // glowing
+      { type:'sub',      line:4, from:5, to:9 },   // in your eyes so true
+    ] },
+  { id:'chorus-b', enter:43.32, hue:9, warmth:0.62,
+    anchor:{ img:'rotary-phone.png', w:56, x:3, y:26, rot:0 },
+    slots:[
+      { type:'headline', line:5, from:0, to:3 },   // Let me call you
+      { type:'script',   line:5, from:4, to:4 },   // sweetheart
+      { type:'sub',      line:5, from:5, to:9 },   // I'm in love with you
+    ] },
+  { id:'dreaming', enter:60.06, hue:14, warmth:0.58,
+    anchor:{ img:'dove.png', w:46, x:6, y:40, rot:0 },
+    slots:[
+      { type:'headline', line:6, from:0, to:2 },   // I am dreaming
+      { type:'script',   line:6, from:3, to:3 },   // dear
+      { type:'sub',      line:6, from:4, to:8 },   // of you day by day
+      { type:'sub',      line:7, from:0, to:8 },   // Dreaming when the skies are blue...
+    ] },
+  { id:'moonlight', enter:79.94, hue:5, warmth:0.5,
+    anchor:{ img:'pearl-necklace.png', w:70, x:0, y:30, rot:0 },
+    slots:[
+      { type:'headline', line:8, from:0, to:2 },   // When the silvery
+      { type:'script',   line:8, from:3, to:3 },   // moonlight
+      { type:'sub',      line:8, from:4, to:10 },  // gleams, still I wander on in dreams
+    ] },
+  { id:'land-of-love', enter:94.4, hue:12, warmth:0.68,
+    anchor:{ img:'typewriter.png', w:58, x:0, y:27, rot:0 },
+    slots:[
+      { type:'headline', line:9, from:0, to:3 },   // In a land of
+      { type:'script',   line:9, from:4, to:4 },   // love
+      { type:'sub',      line:9, from:5, to:6 },   // it seems
+      { type:'sub',      line:10, from:0, to:5 },  // Just with you, just with you
+    ] },
+  { id:'chorus-reprise', enter:112.02, hue:9, warmth:0.66,
+    anchor:{ img:'rose-bouquet.png', w:52, x:-3, y:28, rot:0 },
+    slots:[
+      { type:'headline', line:11, from:0, to:3 },  // Let me call you
+      { type:'script',   line:11, from:4, to:4 },  // sweetheart
+      { type:'sub',      line:11, from:5, to:9 },  // I'm in love with you
+      { type:'sub',      line:12, from:0, to:9 },  // Let me hear you whisper that you love me too
+    ] },
+  { id:'love-light-2', enter:133.12, hue:13, warmth:0.72,
+    anchor:{ img:'ring.png', w:38, x:0, y:32, rot:0 },
+    slots:[
+      { type:'headline', line:13, from:0, to:3 },  // Keep the love light
+      { type:'script',   line:13, from:4, to:4 },  // glowing
+      { type:'sub',      line:13, from:5, to:9 },  // in your eyes so true
+    ] },
+  { id:'finale', enter:143.32, hue:16, warmth:0.85,
+    anchor:{ img:'gramophone.png', w:74, x:-5, y:21, rot:0 },
+    slots:[
+      { type:'headline', line:14, from:0, to:3 },  // Let me call you
+      { type:'script',   line:14, from:4, to:4 },  // sweetheart
+      { type:'sub',      line:14, from:5, to:9 },  // I'm in love with you
+      { type:'spoken',   line:15 },                // the whispered outro tag
+    ] },
 ];
 
-/**
- * Background "mood" per stretch of the song — a hue (for the CSS gradient
- * wash) and a warmth value (0-1) — all within the same vintage sunset
- * family (brick red -> orange -> gold) the reference design uses, so nothing
- * ever drifts into a clashing cool palette; only the exact shade shifts
- * with the section.
- */
-export const MOODS = [
-  { start: 0,      hue: 8,  warmth: 0.5  }, // spoken intro, deep brick red
-  { start: 14.70,  hue: 20, warmth: 0.78 }, // chorus A, warm orange
-  { start: 61.36,  hue: 32, warmth: 0.55 }, // verse, softer amber (dreaming)
-  { start: 113.32, hue: 22, warmth: 0.8  }, // reprise chorus, orange again
-  { start: 144.62, hue: 42, warmth: 0.92 }, // finale, gold
-];
-
-/**
- * Auto-fills instrumental gaps so the timeline always accounts for the
- * exact song duration with zero unaccounted time, same approach as the
- * previous build — this part of the design was already correct.
- */
-export function buildTimeline(lines, totalDuration){
-  const sorted = [...lines].sort((a,b) => a.start - b.start);
-  const timeline = [];
-  let cursor = 0;
-  for (const line of sorted){
-    if (line.start - cursor > 0.6){
-      timeline.push({ type:'gap', start: cursor, end: line.start });
-    }
-    timeline.push(Object.assign({}, line, { type: line.type || 'line', start: Math.max(line.start, cursor) }));
-    cursor = Math.max(cursor, line.end);
-  }
-  if (totalDuration - cursor > 0.6){
-    timeline.push({ type:'gap', start: cursor, end: totalDuration });
-  } else if (totalDuration > cursor){
-    timeline[timeline.length - 1].end = totalDuration;
-  }
-  return timeline;
+/** End of a scene's hold = the next scene's enter (last runs to song end). */
+export function sceneEnd(idx){
+  return idx + 1 < SCENES.length ? SCENES[idx + 1].enter : TOTAL_DURATION;
 }
 
-export const VARIANTS = ['rise', 'zoom', 'skew', 'blur', 'drift', 'bounce'];
-
-/** Looks up the active mood for a given time (last mood whose start <= t). */
-export function moodAt(t){
-  let m = MOODS[0];
-  for (const mood of MOODS){ if (mood.start <= t) m = mood; else break; }
-  return m;
+/**
+ * Thin line doodles per scene — the reference scatters a sparkle cluster
+ * on one side of the anchor and a small heart/x cluster on the other.
+ * Two arrangements alternate by scene so posters don't feel stamped from
+ * one template; the moonlight scene swaps the sparkle for a star.
+ * x/y are % of the poster column; size is a multiplier on the base size.
+ */
+export function sceneDoodles(idx){
+  const A = [
+    { icon:'sparkle', x:79, y:30, size:1.5, rot:8 },
+    { icon:'heart',   x:11, y:56, size:1.0, rot:-14 },
+    { icon:'heart',   x:19, y:63, size:0.62, rot:10 },
+    { icon:'x',       x:8,  y:64, size:0.5, rot:20 },
+  ];
+  const B = [
+    { icon:'sparkle', x:14, y:31, size:1.4, rot:-10 },
+    { icon:'heart',   x:84, y:57, size:1.0, rot:12 },
+    { icon:'x',       x:90, y:64, size:0.5, rot:-15 },
+    { icon:'heart',   x:78, y:65, size:0.6, rot:-8 },
+  ];
+  const arr = (idx % 2 === 1 ? A : B).map(d => ({ ...d }));
+  if (SCENES[idx].id === 'moonlight') arr[0] = { ...arr[0], icon:'star' };
+  return arr;
 }

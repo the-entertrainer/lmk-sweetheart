@@ -1,36 +1,53 @@
 /* =====================================================================
-   My Sweetheart — Vintage Sunset
-   Direction set by the user's own Canva reference: a warm brick-red ->
-   orange -> gold gradient, a bold rounded display face paired with a
-   loose brush script for "Sweetheart", thin line-art doodles, and a
-   continuous stream of real photographic cutouts drifting through the
-   scene in parallax depth (Three.js sprites) rather than flat clip art.
+   My Sweetheart — Vintage Sunset Poster
+   Rebuilt to match the user's own Canva reference frame-for-frame:
+   a fixed poster composition per song section — pinned caption at top,
+   fat retro display type (Titan One) stacking on word-by-word as the
+   words are actually sung, ONE large photographic anchor rising into
+   place and holding, the key word written in connected script (Cookie)
+   across the lower third, thin line doodles — on a brick-red -> gold
+   sunset gradient. Pointer/idle parallax gives the layers depth.
    ===================================================================== */
 
-:root{
-  --ink:        #fff6e8;
-  --ink-dim:    #ffe0c2;
-  --ink-faint:  #d9a583;
-  --gold:       #ffd76a;
-  --cream:      #fff3d6;
-  --brick:      #3a0e07;
-  --brick-2:    #6e1c0c;
-  --orange:     #c1420f;
-  --glass-line: rgba(255,255,255,.18);
+/* Self-hosted (public/fonts/) — no external font dependency at runtime,
+   and headless smoke tests render the real typography. SIL OFL, via
+   Google Fonts; latin subsets only. */
+@font-face{
+  font-family:'Titan One'; font-style:normal; font-weight:400; font-display:swap;
+  src:url('/fonts/titan-one-400.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Cookie'; font-style:normal; font-weight:400; font-display:swap;
+  src:url('/fonts/cookie-400.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Oswald'; font-style:normal; font-weight:500; font-display:swap;
+  src:url('/fonts/oswald-500.woff2') format('woff2');
+}
 
-  /* Updated every frame from lyrics-data.mjs MOODS by src/main.js so the
-     whole page can shift its color temperature with the song's section
-     instead of the same gradient looping underneath every lyric. */
-  --mood-hue: 8;
-  --mood-warmth: 0.5;
+:root{
+  --cream:      #f9eed6;
+  --cream-soft: #fff3d0;
+  --rust:       #8a2f13;
+  --brick:      #a92c17;
+  --gold:       #f6d97e;
+
+  /* Driven every frame by the Theatre.js mood track (src/main.js). */
+  --mood-hue: 6;
+  --mood-warmth: 0.55;
+
+  /* Parallax vector, lerped in src/main.js from the pointer (desktop)
+     or a slow autonomous sway (touch). Layers multiply it differently. */
+  --px: 0;
+  --py: 0;
 }
 
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; height:100%; }
 body{
   background:var(--brick);
-  color:var(--ink);
-  font-family:'Inter',sans-serif;
+  color:var(--cream);
+  font-family:'Oswald',sans-serif;
   overflow:hidden;
   overscroll-behavior:none;
   touch-action:none;
@@ -40,214 +57,239 @@ body{
 }
 ::selection{ background:var(--gold); color:var(--brick); }
 
-/* ---------- BACKGROUND WASH — the sunset gradient, color-graded by song
-   section so the whole room breathes with the lyric ---------- */
+/* ---------- BACKGROUND — the reference's sunset gradient. The bottom
+   stop's hue is nudged toward gold (+38 max lands at 54 = still yellow-
+   gold at every scene hue 5..16 — never green). ---------- */
 #bg{
   position:fixed; inset:0; z-index:0;
-  /* the bottom stop's hue is nudged toward gold, not shifted by a fixed
-     amount regardless of the base hue — at this palette's higher mood
-     hues (32-42, already orange/gold) a big fixed offset overshoots past
-     yellow into a sickly yellow-green; +16 keeps every mood hue (8-42)
-     inside the red -> orange -> gold family. */
   background:
     linear-gradient(180deg,
-      hsl(calc(var(--mood-hue) - 6) 68% calc(14% + var(--mood-warmth) * 5%)) 0%,
-      hsl(var(--mood-hue) 72% calc(27% + var(--mood-warmth) * 9%)) 45%,
-      hsl(calc(var(--mood-hue) + 16) 68% calc(50% + var(--mood-warmth) * 12%)) 100%);
-  transition:background 2.4s ease;
-}
-
-/* ---------- WebGL layer: bokeh particles + parallax photo/doodle scene ---------- */
-#scene-canvas{
-  position:fixed; inset:0; z-index:1; display:block;
-  width:100%; height:100%;
+      hsl(var(--mood-hue) 66% calc(36% + var(--mood-warmth) * 4%)) 0%,
+      hsl(var(--mood-hue) 68% calc(38% + var(--mood-warmth) * 5%)) 44%,
+      hsl(calc(var(--mood-hue) + 20) 72% calc(48% + var(--mood-warmth) * 8%)) 72%,
+      hsl(calc(var(--mood-hue) + 38) 82% calc(64% + var(--mood-warmth) * 10%)) 100%);
 }
 
 #grain{
-  position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.05; mix-blend-mode:overlay;
+  position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 #vignette{
   position:fixed; inset:0; z-index:3; pointer-events:none;
-  background:radial-gradient(120% 90% at 50% 45%, transparent 40%, rgba(20,4,2,.55) 100%);
+  background:radial-gradient(130% 100% at 50% 42%, transparent 55%, rgba(60,10,4,.28) 100%);
 }
-@media (prefers-reduced-motion: reduce){ #bg{ transition:none; } }
 
 /* ---------- PROGRESS ---------- */
 #progress{
   position:fixed; left:0; right:0; top:0; height:3px; z-index:40;
-  background:rgba(255,255,255,.1);
+  background:rgba(255,255,255,.12);
   padding-top:env(safe-area-inset-top);
 }
-#progress-fill{ position:absolute; left:0; top:env(safe-area-inset-top); bottom:0; width:0%; background:linear-gradient(90deg,var(--orange),var(--gold)); }
+#progress-fill{ position:absolute; left:0; top:env(safe-area-inset-top); bottom:0; width:0%; background:var(--cream); opacity:.85; }
 
-/* ---------- STAGE — typography fills the screen ---------- */
-#stage{ position:fixed; inset:0; z-index:5; overflow:hidden; transition:opacity .6s ease; }
-#stage.hidden{ opacity:0; }
-#stack{ position:absolute; left:0; right:0; top:50%; max-width:1180px; margin:0 auto; height:0; }
-.line-slot{
-  position:absolute; left:50%; top:0; width:100%; padding:0 1.5rem;
-  text-align:center; will-change:transform, opacity, filter;
-  transform-origin:center;
+/* ---------- STAGE — a portrait poster column, exactly the reference's
+   9:16 composition, centered whatever the screen shape ---------- */
+#stage{
+  position:fixed; inset:0; z-index:5;
+  display:flex; align-items:center; justify-content:center;
 }
-.section-tag{
-  font-family:'Inter',sans-serif; font-size:.72rem; letter-spacing:.32em; text-transform:uppercase;
-  color:var(--gold); opacity:.85; margin-bottom:1rem; font-weight:600;
-  text-shadow:0 0 18px rgba(255,215,106,.4);
-}
-.lyric-line{
-  display:inline-block; font-family:'Baloo 2',sans-serif; font-weight:700; line-height:1.05;
-  font-size:clamp(2.3rem, 8.6vw, 6rem);
-  color:var(--ink);
-  text-wrap:balance;
-  font-variation-settings:'wght' 700;
-  text-shadow:0 3px 2px rgba(30,4,2,.5), 0 10px 30px rgba(20,2,0,.4);
-  perspective:900px;
-}
-.lyric-line.spoken{ font-weight:600; font-size:clamp(1.1rem,3.2vw,1.55rem); color:var(--ink-dim); text-shadow:none; }
-
-/* A word reading "sweetheart" gets the reference's loose brush-script
-   treatment — one deliberate second typeface, not a whole second system. */
-.word.word-script{
-  font-family:'Caveat',cursive; font-weight:700;
-  font-size:1.5em; line-height:1; vertical-align:-0.08em;
-  color:var(--gold); text-shadow:0 3px 14px rgba(255,215,106,.35);
+.poster-col{
+  position:relative;
+  width:min(100vw, 62dvh, 560px);
+  height:100dvh;
+  container-type:inline-size;
 }
 
-/* ---------- WORDS — sung in real time from actual word-level timestamps ---------- */
-.word{
-  display:inline-block; color:var(--ink-faint);
-  transition:color .22s ease, transform .6s cubic-bezier(.16,.9,.3,1), opacity .55s ease, filter .55s ease;
-  --underline:var(--ink);
-  background-image:linear-gradient(var(--underline),var(--underline));
-  background-repeat:no-repeat; background-position:0 100%;
-  background-size:var(--fill,0%) .08em;
-  padding-bottom:.07em;
-  transform-style:preserve-3d;
-  /* kinetic entrance pose — real word-start-timestamp driven (see
-     renderWords in src/main.js), not a shared line-level tween, so every
-     word visibly arrives on its own beat */
-  opacity:0; transform:translateY(.4em) rotateX(-62deg); filter:blur(7px);
-}
-.word.word-entered{ opacity:1; transform:translateY(0) rotateX(0); filter:blur(0); }
-.word.is-now{ color:var(--ink); animation:word-pop .4s cubic-bezier(.2,.9,.3,1.3); }
-.word.is-sung{ color:var(--ink); background-size:100% .08em; }
-.word.word-special{ --underline:var(--gold); color:#f0c896; }
-.word.word-special.is-now, .word.word-special.is-sung{ color:var(--gold); text-shadow:0 0 22px rgba(255,215,106,.5); }
-@keyframes word-pop{
-  0%{ transform:translateY(0) rotateX(0); }
-  40%{ transform:translateY(-.12em) rotateX(-8deg); }
-  100%{ transform:translateY(0) rotateX(0); }
-}
-@media (prefers-reduced-motion: reduce){
-  .word{ transition:none !important; }
-  .word.is-now{ animation:none !important; }
+#caption{
+  position:absolute; top:calc(5.5% + env(safe-area-inset-top)); left:50%;
+  transform:translate(calc(-50% + var(--px) * -4px), calc(var(--py) * -3px));
+  width:86%;
+  text-align:center;
+  font-family:'Oswald',sans-serif; font-weight:500;
+  font-size:clamp(.72rem, 3.4cqw, 1.05rem);
+  letter-spacing:.09em;
+  color:var(--cream);
+  opacity:0;
+  z-index:8;
 }
 
-/* ---------- DOODLES — thin outline line-art (Lucide, MIT), never flat
-   colored icons; sparse, cream, decorative punctuation only ---------- */
+#poster{ position:absolute; inset:0; transition:opacity .6s ease; }
+#poster.hidden{ opacity:0; }
+
+.scene{
+  position:absolute; inset:0;
+  visibility:hidden;
+  will-change:opacity, transform;
+}
+
+/* ---------- ANCHOR — the one big photographic cutout ---------- */
+.anchor{
+  position:absolute; z-index:2;
+  transform:translate(calc(-50% + var(--px) * -14px), calc(var(--ay, 0px) + var(--py) * -10px)) rotate(var(--arot, 0deg));
+  filter:drop-shadow(0 18px 34px rgba(70,14,4,.38));
+  pointer-events:none;
+  will-change:transform, opacity;
+}
+.anchor img{ width:100%; height:auto; display:block; user-select:none; }
+
+/* ---------- DOODLES — thin cream line work ---------- */
 .doodle{
-  position:absolute; z-index:4; pointer-events:none;
-  width:clamp(22px, 3.4vw, 38px); height:auto; color:var(--cream);
-  opacity:0; filter:drop-shadow(0 2px 8px rgba(0,0,0,.35));
+  position:absolute; z-index:3; pointer-events:none;
+  width:calc(clamp(26px, 7.5cqw, 44px) * var(--dsize, 1));
+  color:var(--cream);
+  transform:translate(calc(var(--px) * -22px), calc(var(--py) * -16px)) rotate(var(--drot, 0deg)) scale(var(--dscale, 1));
+  opacity:0;
+  will-change:transform, opacity;
 }
-.doodle svg{ width:100%; height:100%; display:block; stroke-width:1.5; }
+.doodle svg{ width:100%; height:auto; display:block; stroke-width:1.6; }
 
-/* ---------- INTRO VINYL — procedural CSS disc, no GIF stutter ----------
-   Split into an outer wrapper (Theatre-driven opacity/scale) and an inner
-   disc (CSS-only spin) so the two transforms never fight over the same
-   `transform` property. */
-#intro-vinyl{
-  position:fixed; left:50%; top:50%; z-index:1; width:160px; height:160px; margin:-80px 0 0 -80px;
+/* ---------- TEXT COMPOSITION ---------- */
+.scene-text{
+  position:absolute; inset:0; z-index:4;
+  display:flex; flex-direction:column; align-items:center;
+  padding:0 4%;
+  transform:translate(calc(var(--px) * -6px), calc(var(--py) * -4px));
   pointer-events:none;
 }
-.vinyl-disc{
-  position:absolute; inset:0; border-radius:50%;
-  background:
-    repeating-radial-gradient(circle at 50% 50%, #180a06 0 2px, #260f08 2px 4px),
-    radial-gradient(circle at 42% 38%, #4a1f10, #180a06 70%);
-  box-shadow:0 18px 46px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.05);
-  animation:vinyl-spin 3.2s linear infinite;
+
+.slot{ text-align:center; }
+
+.slot-headline{
+  margin-top:11dvh;
+  font-family:'Titan One',sans-serif; font-weight:400;
+  font-size:clamp(2.1rem, 14.5cqw, 4.9rem);
+  line-height:.99;
+  color:var(--cream);
+  max-width:96%;
+  text-wrap:balance;
+  text-shadow:0 3px 0 rgba(96,18,6,.18), 0 12px 26px rgba(96,18,6,.22);
 }
-.vinyl-disc::before{
-  content:''; position:absolute; inset:38%; border-radius:50%;
-  background:radial-gradient(circle, var(--gold) 0%, var(--orange) 60%, #7a2708 100%);
-  box-shadow:0 0 0 3px rgba(0,0,0,.4);
+
+/* The script word sits over the anchor's base, pushed to the lower third
+   like the reference's "Sweetheart". */
+.slot-script{
+  margin-top:auto;
+  margin-bottom:2%;
+  font-family:'Cookie',cursive; font-weight:400;
+  font-size:clamp(4rem, 26cqw, 8.6rem);
+  line-height:.9;
+  color:var(--cream-soft);
+  text-shadow:0 3px 5px rgba(96,18,6,.45), 0 10px 24px rgba(96,18,6,.25);
 }
-.vinyl-disc::after{
-  content:''; position:absolute; inset:47.5%; border-radius:50%; background:var(--brick);
+.script-word{ display:inline-block; clip-path:inset(-20% 104% -20% -2%); }
+
+.slot-sub{
+  font-family:'Titan One',sans-serif; font-weight:400;
+  font-size:clamp(1.05rem, 5.4cqw, 1.9rem);
+  line-height:1.22;
+  color:var(--rust);
+  max-width:88%;
+  text-wrap:balance;
 }
-@keyframes vinyl-spin{ to{ transform:rotate(360deg); } }
-@media (prefers-reduced-motion: reduce){ .vinyl-disc{ animation:none; } }
+.slot-sub + .slot-sub{ margin-top:.5em; }
+.scene-text .slot-sub:last-child{ margin-bottom:20%; }
+
+/* Spoken banter (intro) / whispered outro — small tracked caps, like a
+   second caption. */
+.slot-spoken{
+  font-family:'Oswald',sans-serif; font-weight:500;
+  font-size:clamp(.82rem, 4cqw, 1.2rem);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  line-height:1.7;
+  color:var(--cream);
+  max-width:84%;
+}
+.slot-spoken:first-child{ margin-top:17dvh; }
+.slot-spoken + .slot-spoken{ margin-top:1.1em; }
+/* keep the intro's spoken lines in the upper half, above the vinyl */
+.slot-spoken:last-of-type{ margin-bottom:auto; }
+
+/* If a scene ends with a spoken slot below subs (the finale's whispered
+   tag), let it rest just above the play button instead. */
+.slot-sub ~ .slot-spoken{
+  margin-top:.9em; margin-bottom:14%;
+  font-size:clamp(.68rem, 3cqw, .95rem);
+  opacity:.85;
+}
+.slot-sub ~ .slot-spoken ~ .slot-sub{ margin-bottom:0; }
+
+/* ---------- LETTERS — the typewriter reveal ---------- */
+.w{ display:inline; }
+.ltr{ visibility:hidden; }
+.ltr.on{ visibility:visible; }
+
+@media (prefers-reduced-motion: reduce){
+  .anchor, .doodle, .scene-text, #caption{ transition:none !important; }
+}
 
 /* ---------- PLAY BUTTON ---------- */
 #play-btn{
   position:fixed; left:50%; z-index:50;
-  bottom:calc(6vh + env(safe-area-inset-bottom));
-  width:78px; height:78px; margin-left:-39px;
+  bottom:calc(4.5vh + env(safe-area-inset-bottom));
+  width:70px; height:70px; margin-left:-35px;
   border:none; cursor:pointer; padding:0; border-radius:50%;
-  background:linear-gradient(155deg, var(--gold), var(--orange));
-  box-shadow:0 12px 34px rgba(193,66,15,.45), inset 0 1px 1px rgba(255,255,255,.5);
+  background:var(--cream);
+  box-shadow:0 10px 26px rgba(90,18,6,.35), inset 0 1px 1px rgba(255,255,255,.7);
   -webkit-tap-highlight-color:transparent;
   transition:transform .3s cubic-bezier(.34,1.56,.64,1);
   touch-action:manipulation;
 }
 #play-btn:active{ transform:scale(.9); }
 #play-btn::before{
-  content:''; position:absolute; inset:-8px; border-radius:50%;
-  border:1.5px solid var(--glass-line); opacity:.6;
+  content:''; position:absolute; inset:-7px; border-radius:50%;
+  border:1.5px solid rgba(249,238,214,.5);
 }
-.icon-wrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#3a0e07; }
-.icon-wrap svg{ width:26px; height:26px; transition:opacity .25s ease, transform .35s cubic-bezier(.34,1.56,.64,1); }
+.icon-wrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--brick); }
+.icon-wrap svg{ width:24px; height:24px; transition:opacity .25s ease, transform .35s cubic-bezier(.34,1.56,.64,1); }
 #icon-play{ transform:translateX(2px); }
 #icon-pause{ opacity:0; transform:scale(.6); position:absolute; }
 #play-btn.is-playing #icon-play{ opacity:0; transform:scale(.6); }
 #play-btn.is-playing #icon-pause{ opacity:1; transform:scale(1); }
 
-/* ---------- FINALE ---------- */
+/* ---------- FINALE CARD ---------- */
 #finale{
   position:fixed; inset:0; z-index:48;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.1rem;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.4rem;
   pointer-events:none; opacity:0; transition:opacity 1s ease;
-  background:radial-gradient(closest-side, rgba(255,215,106,.16), transparent 70%);
 }
 #finale.visible{ opacity:1; pointer-events:auto; }
-.finale-flourish{ position:absolute; inset:0; overflow:hidden; }
 .finale-photo{
-  position:absolute; width:clamp(90px, 14vw, 160px); pointer-events:none;
-  opacity:0; transform:translateY(14px) scale(.6);
+  position:absolute; width:clamp(80px, 13vw, 150px); pointer-events:none;
+  opacity:0; transform:translateY(16px) scale(.6);
   transition:opacity 1s ease, transform 1.2s cubic-bezier(.34,1.56,.64,1);
-  filter:drop-shadow(0 10px 24px rgba(0,0,0,.4));
+  filter:drop-shadow(0 12px 24px rgba(70,14,4,.35));
 }
-.finale-photo img{ width:100%; height:auto; display:block; }
-#finale.visible .finale-photo{ opacity:.9; transform:translateY(0) scale(1); }
+#finale.visible .finale-photo{ opacity:.95; transform:translateY(0) scale(1); }
+.fp-1{ top:12%; left:10%; transition-delay:.5s; }
+.fp-2{ top:16%; right:11%; transition-delay:.7s; }
+.fp-3{ bottom:13%; left:13%; transition-delay:.9s; transform:translateY(16px) scale(.6) rotate(-6deg); }
 .finale-heart{
-  width:110px; opacity:0; transform:scale(.4);
+  width:clamp(96px, 16vw, 150px); opacity:0; transform:scale(.4);
   transition:opacity .7s ease .2s, transform .9s cubic-bezier(.34,1.56,.64,1) .2s;
   animation:heartbeat 1.15s ease-in-out infinite;
   animation-play-state:paused;
-  filter:drop-shadow(0 10px 26px rgba(255,215,106,.4));
+  filter:drop-shadow(0 12px 26px rgba(90,18,6,.4));
 }
 #finale.visible .finale-heart{ opacity:1; transform:scale(1); animation-play-state:running; }
-@keyframes heartbeat{ 0%,100%{ transform:scale(1); } 22%{ transform:scale(1.14); } 40%{ transform:scale(.97); } 55%{ transform:scale(1.08); } }
-.finale-text{ text-align:center; font-family:'Baloo 2',sans-serif; position:relative; z-index:1; }
+@keyframes heartbeat{ 0%,100%{ transform:scale(1); } 22%{ transform:scale(1.12); } 40%{ transform:scale(.97); } 55%{ transform:scale(1.06); } }
+.finale-text{ text-align:center; position:relative; z-index:1; }
 .finale-text span{
-  display:block; opacity:0; transform:translateY(20px);
+  display:block; opacity:0; transform:translateY(18px);
   transition:opacity .8s ease, transform .8s cubic-bezier(.34,1.56,.64,1);
 }
-.finale-text .line1{ font-size:clamp(1.1rem,3.6vw,1.5rem); font-weight:600; color:var(--ink-dim); transition-delay:.9s; padding:0 1rem; }
-.finale-text .line2{ font-family:'Caveat',cursive; font-size:clamp(3rem,10vw,5.4rem); font-weight:700; color:var(--gold); transition-delay:1.15s; }
+.finale-text .line1{
+  font-family:'Oswald',sans-serif; font-weight:500; letter-spacing:.16em;
+  font-size:clamp(.9rem,3vw,1.2rem); color:var(--cream); transition-delay:.9s;
+}
+.finale-text .line2{
+  font-family:'Cookie',cursive; font-size:clamp(3.4rem,11vw,5.6rem);
+  color:var(--cream-soft); transition-delay:1.15s;
+  text-shadow:0 4px 18px rgba(96,18,6,.3);
+}
 #finale.visible .finale-text span{ opacity:1; transform:translateY(0); }
 
 @media (prefers-reduced-motion: reduce){
-  #finale, .finale-heart, .finale-text span, #play-btn{ transition-duration:.25s !important; }
+  #finale, .finale-heart, .finale-photo, .finale-text span, #play-btn{ transition-duration:.25s !important; }
   .finale-heart{ animation:none; }
-}
-
-/* ---------- MOBILE ---------- */
-@media (max-width: 640px){
-  #stack{ max-width:100%; }
-  .line-slot{ padding:0 1.1rem; }
-  .doodle{ width:clamp(18px, 6vw, 28px); }
-  .finale-text .line1{ padding:0 1rem; }
 }

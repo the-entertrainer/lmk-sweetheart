@@ -14,16 +14,19 @@ async function main(){
   const sheet = project.sheet('Lyrics');
   await project.ready;
 
-  const obj = sheet.object('line-2', { x:0, y:0, opacity:1, scale:1, rotate:0, blur:0, weight:600 });
-  const camera = sheet.object('camera', { z:8, fov:45, yaw:0 });
-  const photo0 = sheet.object('photo-0', { opacity:0, scaleMul:1, x:0, y:0, rotate:0 });
-  const mood = sheet.object('mood', { hue:8, warmth:0.5 });
+  const scene0 = sheet.object('scene-0', { opacity:1, y:0 });
+  const scene1 = sheet.object('scene-1', { opacity:0, y:0 });
+  const anchor1 = sheet.object('anchor-1', { opacity:0, y:90, rot:0 });
+  const mood = sheet.object('mood', { hue:6, warmth:0.55 });
   const samples = [];
-  for (const t of [0, 13.0, 13.5, 14.7, 18, 22.9, 24, 25]){
+  for (const t of [0, 5, 13.0, 13.9, 14.7, 16, 22, 34.5, 36]){
     sheet.sequence.position = t;
     samples.push({
-      t, y: obj.value.y, opacity: obj.value.opacity, scale: +obj.value.scale.toFixed(3), weight: Math.round(obj.value.weight),
-      cameraZ: +camera.value.z.toFixed(2), photo0Opacity: +photo0.value.opacity.toFixed(2), photo0X: +photo0.value.x.toFixed(2),
+      t,
+      s0: +scene0.value.opacity.toFixed(2),
+      s1: +scene1.value.opacity.toFixed(2),
+      anchor1Y: +anchor1.value.y.toFixed(1),
+      anchor1Op: +anchor1.value.opacity.toFixed(2),
       moodHue: +mood.value.hue.toFixed(1),
     });
   }
