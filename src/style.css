@@ -28,7 +28,7 @@
 :root{
   --cream:      #f9eed6;
   --cream-soft: #fff3d0;
-  --rust:       #8a2f13;
+  --rust:       #7d3117;
   --brick:      #a92c17;
   --gold:       #f6d97e;
 
@@ -64,15 +64,20 @@ body{
   position:fixed; inset:0; z-index:0;
   background:
     linear-gradient(180deg,
-      hsl(var(--mood-hue) 66% calc(36% + var(--mood-warmth) * 4%)) 0%,
-      hsl(var(--mood-hue) 68% calc(38% + var(--mood-warmth) * 5%)) 44%,
-      hsl(calc(var(--mood-hue) + 20) 72% calc(48% + var(--mood-warmth) * 8%)) 72%,
-      hsl(calc(var(--mood-hue) + 38) 82% calc(64% + var(--mood-warmth) * 10%)) 100%);
+      hsl(var(--mood-hue) 48% calc(39% + var(--mood-warmth) * 4%)) 0%,
+      hsl(var(--mood-hue) 50% calc(41% + var(--mood-warmth) * 5%)) 44%,
+      hsl(calc(var(--mood-hue) + 18) 55% calc(51% + var(--mood-warmth) * 8%)) 72%,
+      hsl(calc(var(--mood-hue) + 34) 62% calc(66% + var(--mood-warmth) * 9%)) 100%);
 }
 
 #grain{
-  position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
+  position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.06;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+#scanlines{
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  background:repeating-linear-gradient(0deg,
+    rgba(46,12,4,.06) 0 1px, transparent 1px 3px);
 }
 #vignette{
   position:fixed; inset:0; z-index:3; pointer-events:none;
@@ -129,11 +134,12 @@ body{
    horn; that is the only sanctioned intrusion. */
 .anchor-box{
   flex:1 1 0; min-height:0; width:100%;
-  position:relative;
+  position:relative; z-index:2;
   display:flex; align-items:flex-end; justify-content:center;
   margin-top:calc(var(--kiss, 0) * -1dvh);
 }
 .anchor{
+  position:relative;
   height:100%; width:var(--aw, 60%);
   margin-left:var(--ax, 0%);
   transform:translate(calc(var(--px) * -14px), calc(var(--ay, 0px) + var(--py) * -10px)) rotate(var(--arot, 0deg));
@@ -143,7 +149,12 @@ body{
   width:100%; height:100%;
   display:block; user-select:none;
   object-fit:contain; object-position:bottom center;
-  filter:drop-shadow(0 14px 26px rgba(70,14,4,.36));
+}
+.anchor::after{
+  content:''; position:absolute; left:50%; bottom:-2.2%;
+  width:78%; height:7%;
+  transform:translateX(-50%);
+  background:radial-gradient(50% 50% at 50% 50%, rgba(70,14,4,.32), transparent 70%);
 }
 
 /* ---------- DOODLES — thin cream line work ---------- */
@@ -171,27 +182,31 @@ body{
 .slot{ text-align:center; }
 
 .slot-headline{
-  flex:none;
+  flex:none; z-index:1;
   font-family:'Titan One',sans-serif; font-weight:400;
   font-size:clamp(2.1rem, 14.5cqw, 4.9rem);
   line-height:.99;
   color:var(--cream);
   max-width:96%;
   text-wrap:balance;
-  text-shadow:0 3px 0 rgba(96,18,6,.18), 0 12px 26px rgba(96,18,6,.22);
+  text-shadow:
+    2px 0 0 rgba(255,84,56,.20), -2px 0 0 rgba(96,228,255,.14),
+    0 3px 0 rgba(96,18,6,.16), 0 12px 24px rgba(96,18,6,.2);
 }
 
 /* The script word sits over the anchor's base, pushed to the lower third
    like the reference's "Sweetheart". */
 .slot-script{
-  flex:none; z-index:1;
+  flex:none; z-index:3;
   margin-top:calc(var(--soverlap, 0) * -1dvh);
   margin-bottom:2.6dvh;
   font-family:'Cookie',cursive; font-weight:400;
   font-size:clamp(4rem, 26cqw, 8.6rem);
   line-height:.9;
   color:var(--cream-soft);
-  text-shadow:0 3px 5px rgba(96,18,6,.45), 0 10px 24px rgba(96,18,6,.25);
+  text-shadow:
+    1.5px 0 0 rgba(255,84,56,.18), -1.5px 0 0 rgba(96,228,255,.12),
+    0 3px 5px rgba(96,18,6,.42), 0 10px 22px rgba(96,18,6,.22);
 }
 .script-word{ display:inline-block; clip-path:inset(-20% 104% -20% -2%); }
 

@@ -180,10 +180,18 @@ async function main(){
   const sheet = project.sheet('Lyrics');
   await project.ready;
 
+  // Quantized: the gradient only re-renders when the hue moves a visible
+  // step, not every frame of a crossfade ramp — a full-screen repaint at
+  // 3x DPR per frame is exactly the kind of load that killed iOS Safari.
+  let lastHue = -1, lastWarmth = -1;
   const moodObj = sheet.object('mood', { hue: 6, warmth: 0.55 });
   moodObj.onValuesChange(v => {
-    root.style.setProperty('--mood-hue', v.hue.toFixed(1));
-    root.style.setProperty('--mood-warmth', v.warmth.toFixed(2));
+    const hue = Math.round(v.hue * 2) / 2;
+    const warmth = Math.round(v.warmth * 40) / 40;
+    if (hue === lastHue && warmth === lastWarmth) return;
+    lastHue = hue; lastWarmth = warmth;
+    root.style.setProperty('--mood-hue', hue);
+    root.style.setProperty('--mood-warmth', warmth);
   });
 
   const captionObj = sheet.object('caption', { opacity: 0 });
