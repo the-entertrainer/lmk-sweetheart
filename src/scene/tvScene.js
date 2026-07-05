@@ -146,7 +146,7 @@ export async function initTvScene(canvas, opts = {}){
   material.emissiveMap?.dispose();
   material.emissiveMap = emissiveTexture;
   material.emissive = new THREE.Color(0xffffff);
-  material.emissiveIntensity = 1.4;
+  material.emissiveIntensity = 0.4;
   material.needsUpdate = true;
 
   /** Composite a screen-content source canvas (drawn normally, upright, at
@@ -168,12 +168,17 @@ export async function initTvScene(canvas, opts = {}){
   }
 
   // ---- Bloom post-processing ------------------------------------------
-  // Threshold tuned so only the emissive screen glow (and its own bright
-  // specular highlight) blooms — the PBR-lit wood bezel stays clean.
+  // Threshold/strength tuned conservatively — legibility of the on-screen
+  // text comes first, the glow is a garnish. A first pass at this (0.85
+  // strength / 0.72 threshold / 1.4 emissive intensity) blew the whole
+  // screen out to a shapeless white blob on close-up shots, especially
+  // once real bright text/photo content (not just the idle gradient) was
+  // on screen — a higher threshold and much lower strength keeps the glow
+  // to genuinely bright peaks instead of the whole picture.
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.55, 0.72,
+    new THREE.Vector2(window.innerWidth, window.innerHeight), 0.35, 0.3, 0.86,
   );
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
