@@ -41,6 +41,35 @@ function buildSpokenLine(spec){
   return div;
 }
 
+/**
+ * Ink runs for a wet word. Each drip's geometry and timing is random
+ * within bounds tuned to read as gravity: it starts just under the
+ * baseline, waits for the wipe to lay the ink down (baseDelay), then a
+ * slow ease-in run of .3–.9em over 1.5–2.8s.
+ */
+function addDrips(el, count, baseDelay, auto, maxH = 0.34){
+  for (let i = 0; i < count; i++){
+    const drip = document.createElement('i');
+    drip.className = 'drip' + (auto ? ' auto' : '');
+    const dur = 1.5 + Math.random() * 1.3;
+    const delay = baseDelay + i * 0.4 + Math.random() * 0.5;
+    // Runs fall from just under the swash underline (the wettest stroke),
+    // never through it, and stay short enough not to reach the deck.
+    drip.style.left = (16 + Math.random() * 64).toFixed(1) + '%';
+    drip.style.top = (1.02 + Math.random() * 0.05).toFixed(3) + 'em';
+    drip.style.width = (0.026 + Math.random() * 0.02).toFixed(3) + 'em';
+    drip.style.setProperty('--dh', (maxH * (0.45 + Math.random() * 0.55)).toFixed(3) + 'em');
+    if (auto){
+      drip.style.setProperty('--ddur', dur.toFixed(2) + 's');
+      drip.style.setProperty('--dd', delay.toFixed(2) + 's');
+    } else {
+      drip.style.transitionDuration = `${dur.toFixed(2)}s, .35s`;
+      drip.style.transitionDelay = `${delay.toFixed(2)}s, ${delay.toFixed(2)}s`;
+    }
+    el.append(drip);
+  }
+}
+
 function buildKw(word){
   const kw = document.createElement('span');
   kw.className = 'kw';
@@ -51,6 +80,7 @@ function buildKw(word){
   inner.textContent = word.w;
   kw.append(inner);
   kw.insertAdjacentHTML('beforeend', SWASH);
+  if (!REDUCED_MOTION) addDrips(kw, 3, dur * 0.7);
   cue(kw, word.s);
   return kw;
 }
@@ -134,6 +164,10 @@ tcTotal.textContent = fmt(TOTAL_DURATION);
 
 const banter = document.getElementById('cover-banter');
 (PLATES[0].spoken || []).forEach(spec => banter.append(buildSpokenLine(spec)));
+
+// The cover title is wet ink too — its drips run once, after the swash
+// has drawn itself (the swash animation ends ~2.15s into the load).
+if (!REDUCED_MOTION) addDrips(document.querySelector('.cover .t2'), 3, 2.3, true, 0.12);
 
 const plateEls = [document.getElementById('plate-0')];
 PLATES.slice(1).forEach((plate, i) => {

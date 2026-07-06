@@ -72,7 +72,7 @@ WebP, script in git history) and is printed into the paper with
 
 | File | Source (Wikimedia Commons) | License | Plate — the line it answers |
 |---|---|---|---|
-| `bell.webp` | [File:Bell (Hand) (PSF).png](https://commons.wikimedia.org/wiki/File:Bell_(Hand)_(PSF).png) | Public domain | II The Chorus — "let me *call* you" |
+| `gibson-couple.webp` | [File:The Greatest Game in the World -- His Move.jpg](https://commons.wikimedia.org/wiki/File:The_Greatest_Game_in_the_World_--_His_Move.jpg) — Charles Dana Gibson, 1903 (the scan is tagged CC BY 2.0 by its Flickr uploader; the drawing itself is US public domain, published 1903; printed caption strip cropped) | Public domain (1903) / scan CC BY 2.0 | II The Chorus — a 1900s couple mid-courtship over a chessboard |
 | `sconce.webp` | [File:Sconce 2 (PSF).png](https://commons.wikimedia.org/wiki/File:Sconce_2_(PSF).png) | Public domain | III The Love Light — a lit wall-light |
 | `lyre.webp` | [File:Lyre (PSF).png](https://commons.wikimedia.org/wiki/File:Lyre_(PSF).png) | Public domain | IV Chorus, again — the serenade |
 | `clouds.webp` | [File:Cumulus cloud (PSF).png](https://commons.wikimedia.org/wiki/File:Cumulus_cloud_(PSF).png) | Public domain | V Dreaming — "when the skies are blue, when they're gray" |

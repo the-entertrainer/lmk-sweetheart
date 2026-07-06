@@ -484,3 +484,13 @@ red wax-seal play button. Lessons:
   via a PIL contact sheet before wiring in — several "obvious" titles
   were wrong (PSF's `Candle` is a birthday cake; its `Phonograph` is a
   1950s record player; `Crescent 1` has text labels baked in).
+- **Ink-drip addendum:** two traps in the wet-ink pass. (1) A CSS
+  `filter: url(#...)` referencing an SVG filter clips its element's
+  painting to the filter region — drips hanging ~0.9em below the word's
+  box vanished until the region grew (`y="-15%" height="240%"`). (2)
+  Drips must fall from *below* the swash underline, not from the text
+  baseline — baseline-anchored runs cross the underline and read as
+  stray strokes, not ink. Randomize geometry per drip in JS; keep the
+  gravity in the transition's ease-in, and cap drip length so it can't
+  reach the next text block (the cover needs a shorter cap than the
+  plates).

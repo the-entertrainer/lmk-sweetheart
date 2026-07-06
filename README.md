@@ -33,17 +33,22 @@ only red on the page.
   keyword arrives as an ink wipe plus a hand-drawn swash underline
   animated by `stroke-dashoffset`. All three are pure CSS transitions
   toggled by one per-frame timestamp comparison.
-- **Figures that mean the line.** Each plate's figure is a public-domain
-  ink illustration chosen for the lyric being sung — the hand-bell for
-  "let me *call* you," a lit sconce for "the love light," a lyre for the
-  chorus reprise, cumulus skies for "blue… gray," a stippled full moon
-  for "silvery moonlight," a turtledove for "a land of love," a man
-  writing for "hear you whisper," a carried lantern, a single engraved
-  rose. All nine come from one archive (Pearson Scott Foresman, Wikimedia
-  Commons) so the set reads as one hand, processed to
-  letterpress-ink-on-transparent and multiply-blended into the paper.
-  Paper grain is an inline SVG `feTurbulence` data URI; trim, crop marks
-  and rules are CSS borders.
+- **Figures that mean the line, in 1900s romantic ink.** Each plate's
+  figure is a public-domain ink illustration chosen for the lyric being
+  sung — a Charles Dana Gibson couple mid-courtship for the chorus, a lit
+  sconce for "the love light," a lyre for the serenade, cumulus skies for
+  "blue… gray," a stippled full moon for "silvery moonlight," a
+  turtledove for "a land of love," a man writing for "hear you whisper,"
+  a carried lantern, a single engraved rose. Eight of nine come from one
+  archive (Pearson Scott Foresman, Wikimedia Commons) so the set reads as
+  one hand, processed to letterpress-ink-on-transparent and
+  multiply-blended into the paper. Paper grain is an inline SVG
+  `feTurbulence` data URI; trim, crop marks and rules are CSS borders.
+- **Wet ink behaves like ink.** The keyword's edges bleed into the paper
+  via an SVG `feTurbulence` + `feDisplacementMap` filter, and once sung,
+  short runs drip down from beneath the swash underline — randomized
+  width, position, length and timing per drip, gravity in the easing.
+  Disabled under `prefers-reduced-motion`.
 - **Typography is the design.** Instrument Serif (display roman + the
   blue italic "written" voice), Schibsted Grotesk (labels, small caps),
   Fragment Mono (timecode, folios, figure captions) — self-hosted latin

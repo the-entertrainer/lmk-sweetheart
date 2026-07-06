@@ -88,7 +88,7 @@ export const PLATES = [
   { id:'prologue', enter:0, roman:'I', section:'Prologue', cover:true,
     spoken:[ { line:0 }, { line:1 } ] },
   { id:'chorus', enter:13.4, roman:'II', section:'The Chorus',
-    fig:{ img:'bell.webp', size:'md', caption:'The Call' },
+    fig:{ img:'gibson-couple.webp', size:'lg', caption:'The Greatest Game' },
     headline:{ line:2, from:0, to:4 },            // Oh, let me call you
     kw:{ line:2, at:5 },                          // sweetheart
     deck:[ { line:2, from:6, to:10 }, { line:3, from:0, to:9 } ] },

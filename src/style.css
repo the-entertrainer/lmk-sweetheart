@@ -102,9 +102,7 @@ body{
   font-size:clamp(8px, .95vw, 13px); letter-spacing:.08em;
   min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-#mast .meta b{ color:var(--blue); font-weight:400; }
 #meta-caption{ display:none; }
-body.inplates #meta-credits{ display:none; }
 body.inplates #meta-caption{ display:inline; }
 
 #edition{ flex:1; position:relative; min-height:0; }
@@ -154,13 +152,15 @@ body.inplates #meta-caption{ display:inline; }
   transition:transform .42s var(--ease-out), opacity .18s linear;
 }
 
-/* the written word */
+/* the written word — wet ink: edges bleed into the paper (SVG
+   displacement filter in index.html), and once sung it drips */
 .kw{
   font-family:var(--serif); font-style:italic; color:var(--blue);
   font-size:clamp(2.7rem, 13.5vmin, 8.6rem);
   line-height:1; display:inline-block; position:relative;
   padding-right:.08em; /* italic overhang */
   margin:clamp(2px,.8vh,10px) 0 clamp(4px,1vh,12px);
+  filter:url(#ink-bleed);
 }
 .kw.inline{ font-size:1.12em; margin:0; vertical-align:baseline; }
 .kw .kw-in{
@@ -181,6 +181,32 @@ body.inplates #meta-caption{ display:inline; }
   stroke-dashoffset:0;
   transition:stroke-dashoffset .8s var(--ease-ink) calc(var(--kwdur,.7s)*.55);
 }
+
+/* ink drips — narrow runs that bleed down from the wet keyword once it
+   is sung. Geometry (left/top/width/final height) and timing (delay,
+   duration) are randomized per drip by src/main.js; gravity is the
+   ease-in. The bead (::after) is the fattening head of the run. */
+.drip{
+  position:absolute; display:block;
+  height:0; opacity:0;
+  background:var(--blue); border-radius:0 0 .5em .5em;
+  transition-property:height, opacity;
+  pointer-events:none;
+}
+.kw.sung .drip{ height:var(--dh); opacity:.75; }
+.drip::after{
+  content:""; position:absolute; left:50%; bottom:-.014em;
+  width:.055em; height:.055em; transform:translateX(-50%);
+  border-radius:50%; background:var(--blue);
+}
+/* the cover title's drips run once on load instead of on a cue */
+.drip.auto{ animation:drip-grow var(--ddur,2s) cubic-bezier(.55,.06,.68,.19) var(--dd,2.4s) forwards; }
+@keyframes drip-grow{
+  from{ height:0; opacity:0; }
+  12%{ opacity:.75; }
+  to{ height:var(--dh); opacity:.75; }
+}
+.cover .t2{ filter:url(#ink-bleed); }
 
 /* deck — ghosts ink themselves in */
 .deck{
@@ -254,10 +280,6 @@ body.inplates #meta-caption{ display:inline; }
   color:var(--blue); opacity:.8; overflow:visible;
 }
 .cover .t2 .swash path{ stroke-dasharray:1; stroke-dashoffset:1; animation:swash-draw .9s var(--ease-ink) 1.25s forwards; }
-.cover .cred{
-  font-weight:500; color:var(--graphite);
-  font-size:clamp(9px, 1vw, 14px); letter-spacing:.24em; text-transform:uppercase;
-}
 .cover .stand{
   font-family:var(--serif); font-style:italic; color:var(--graphite);
   font-size:clamp(1rem, 2.4vmin, 1.5rem);
@@ -355,6 +377,8 @@ body.playing #seal-dock .i-pause{ display:block; }
   .kw .kw-in{ clip-path:none; opacity:0; }
   .kw.sung .kw-in{ opacity:1; transition:opacity .4s linear; }
   .kw .swash path, .cover .t2 .swash path{ stroke-dashoffset:0; animation:none; transition:none; }
+  .drip{ display:none; }
+  .kw, .cover .t2{ filter:none; }
   .spoken .sw{ transform:none; }
   .rise, .rev .rise{ animation:none; opacity:1; transform:none; }
   .plate .kick, .figwrap{ transform:none; transition:opacity .5s linear; }
