@@ -7,16 +7,17 @@ Three.js / Vite project, not just this one.
 ## What this project is
 
 A single-page, one-button lyric page for a public-domain 1910 song,
-currently built as "poster scenes" matched to the sender's own Canva
-reference (see Update 2 at the bottom — read it before touching the visual
+currently built as **"The Sweetheart Edition"** — an ink-on-paper
+editorial system where the song typesets itself live as a fine-press love
+letter (see Update 4 at the bottom — read it before touching the visual
 design). Everything is real: real word-level audio timestamps
-(faster-whisper), a real Theatre.js keyframe sequence for every tweened
-value, real licensed photographic cutouts. See `README.md` for the
-architecture and `ATTRIBUTION.md` for every asset's source. Read
-`src/lyrics-data.mjs` first — it's the single source of truth that both the
-runtime page and the Theatre-state build script import from. (The Three.js
-sections below describe earlier iterations that no longer ship — kept
-because the lessons are real; the current build is DOM + CSS only.)
+(faster-whisper), real licensed photographic cutouts printed as ink
+plates. See `README.md` for the architecture and `ATTRIBUTION.md` for
+every asset's source. Read `src/lyrics-data.mjs` first — it's the single
+source of truth (word timing + the `PLATES` editorial mapping). The
+current build is DOM + CSS only with **zero runtime dependencies** — the
+Theatre.js and Three.js sections below describe earlier iterations that
+no longer ship, kept because the lessons are real.
 
 ## Theatre.js — advanced patterns learned this session
 
@@ -422,3 +423,49 @@ the project for this (it had been removed in the prior pivot). Lessons:
   `<script type="module">` test page with no framework, testing one
   variable at a time) before suspecting your own Three.js code when a
   canvas screenshots blank but the same JS logs prove it rendered.
+
+## Update 4: the ink-editorial redesign ("The Sweetheart Edition")
+
+The vintage-TV build was fully replaced on an explicit request to
+reimagine everything — approach, palette, fonts, graphics, theme,
+animations — toward a light/paper, modern-ink editorial direction with
+typography as the lead. What ships now: a paper sheet with a printed grid
+(masthead, hairline trim, crop marks, folio), ten editorial PLATES that
+compose in word-by-word at real sung timestamps and hold, a fountain-pen
+blue italic keyword with a self-drawing swash underline, licensed photo
+cutouts printed as grayscale multiply-blended "ink plates," and a single
+red wax-seal play button. Lessons:
+
+- **When a photo prints as an "ink plate" (grayscale + multiply onto
+  paper), subject brightness is a per-asset editorial decision, not one
+  shared filter.** White subjects (pearls, dove, diamond ring) multiply
+  toward invisible; near-black ones (a deep-red rose goes ~0.2 luminance
+  in grayscale) print as solid silhouettes. Fix: small per-figure tone
+  classes (`deep` = darken light subjects, `lift` = brighten dark ones,
+  here `brightness(2.1)` for the rose) declared per-asset in the data.
+  Screenshot every figure — the failures are individually obvious and
+  collectively invisible if you only check one plate.
+- **An SVG stroke armed for a dashoffset draw-on is not invisible before
+  it runs**: with `stroke-linecap: round` and `stroke-dasharray/offset: 1`,
+  browsers render the path's start as a lone dot. Keep the whole SVG at
+  `opacity: 0` until the reveal class lands, then let the dashoffset
+  transition draw it.
+- **`loading="lazy"` never fires for images inside `visibility: hidden`
+  ancestors** (Chromium defers lazy images that aren't intersecting-and
+  -renderable), so lazy figures in pre-built hidden plates would pop in
+  blank at plate-turn. Eager-load small per-section imagery that is
+  guaranteed to be shown; `decoding="async"` is enough.
+- **A timed-cue engine for class toggles beats per-element timeouts**: one
+  sorted array of {t, el}, a pointer walked forward each frame, and an
+  O(n) full re-sync only on backward seeks. Idempotent in both
+  directions, trivially testable by setting `audio.currentTime` from a
+  headless page.
+- **Masked word-rise slots clip descenders** if the slot is exactly the
+  line box: give each `overflow: hidden` slot `padding-bottom: .14em;
+  margin-bottom: -.14em` so g/y/p survive while the mask still hides the
+  pre-rise word.
+- **The DOM smoke-test needs a real readiness signal, not a timeout**:
+  `src/main.js` sets `window.__editionReady` after `document.fonts.ready`;
+  `tools/smoke-test-page.mjs` waits on that flag. Self-hosted fonts are
+  what make headless screenshots typographically truthful in this sandbox
+  (its Playwright Chromium cannot reach external hosts at all).

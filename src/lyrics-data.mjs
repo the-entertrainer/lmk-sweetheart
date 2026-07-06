@@ -10,14 +10,15 @@
  * Theatre.js keyframes from it) and src/main.js (which plays it back), so
  * the two never drift apart.
  *
- * Visual model — the song plays out as a broadcast on a 3D vintage TV's CRT
- * screen (src/scene/tvScene.js + src/scene/tvScreen.js): the song divides
- * into SCENES at section boundaries, each a fixed lower-third title card
- * that BUILDS IN ONCE and HOLDS — chunky display type accumulating
- * word-by-word as the words are actually sung (typewriter-style, nothing
- * ever flies through), one large photographic anchor object behind it, and
- * the word "sweetheart" (or the scene's emotional keyword) drawing itself
- * in script. At the next section the screen crossfades to the next card.
+ * Visual model — "The Sweetheart Edition": the song is typeset live as a
+ * fine-press love letter. The viewport is a sheet of paper with a printed
+ * grid (masthead, hairline trim, folio). The song divides into PLATES at
+ * its section boundaries; each plate is one editorial spread whose display
+ * headline rises word-by-word out of masked slots at the words' real sung
+ * timestamps, whose emotional keyword inks itself on in italic (clip-path
+ * wipe + a hand-drawn swash underline), and whose licensed photographic
+ * cutout is printed into the paper as an ink-plate figure. A finished
+ * spread HOLDS like a printed page until the next plate is pulled.
  */
 
 export const TOTAL_DURATION = 179.4; // ffprobe-measured file duration
@@ -48,115 +49,91 @@ export function assetPath(name){
   return `assets/photo/${name}`;
 }
 
-// The permanent caption pinned at the top of every poster — the sender's
-// own aside, taken verbatim from their reference design. It types on at
-// the very start and never leaves.
+// The sender's own aside — the standfirst printed under the cover title,
+// and the running line in the masthead while the plates are up.
 export const CAPTION = {
-  text: "(SENDING YOU THIS AS I DON'T KNOW HOW TO FLIRT)",
+  text: "(sending you this as I don't know how to flirt)",
   start: 0.6,
   end: 2.6,
 };
 
 /**
- * The poster scenes. `enter` is when the scene's crossfade begins —
+ * The plates of the edition. `enter` is when the plate turn begins —
  * computed as max(previous line's end - 0.4, own first word - 1.3) so a
- * still-being-sung word is never cut off, but the poster is standing
- * before its first word arrives. A scene holds until the next scene's
- * `enter` (the last until TOTAL_DURATION).
+ * still-being-sung word is never cut off, but the new spread is standing
+ * before its first word arrives. A plate holds until the next plate's
+ * `enter` (the last until TOTAL_DURATION); the colophon replaces the last
+ * plate when the recording ends.
  *
- * `anchor` is the scene's one large photographic cutout. It renders
- * INSIDE a flex zone between the headline and the script, sized by
- * max-width (`w`, % of the poster column) and the zone's own height — so
- * it geometrically cannot collide with the text on any viewport. The two
- * deliberate overlaps the reference design uses are explicit, bounded
- * parameters instead: `kiss` (dvh the image may tuck up behind the
- * headline) and `overlap` (dvh the script may sit over the anchor's dark
- * base). `x` is a lateral % offset; `rot` a resting tilt.
+ * Each plate maps word ranges of LYRICS lines onto the spread's fixed
+ * text roles:
+ *  - `headline`: display serif, rises word-by-word out of masked slots
+ *  - `kw`: the emotional keyword — italic, fountain-pen blue, revealed by
+ *    an ink wipe, then a swash underline draws itself. `kwAfter:true`
+ *    keeps it on the same visual line as the headline's tail.
+ *  - `deck`: the smaller serif deck. Unsung words wait as ghosts and ink
+ *    themselves at their sung timestamp.
+ *  - `spoken`: mono small-caps apparatus lines (intro banter, the
+ *    whispered outro tag).
+ * Words accumulate as sung; nothing is removed until the plate turns.
  *
- * `slots` map word ranges of LYRICS lines onto the poster's fixed text
- * areas — 'headline' (chunky display, upper third), 'script' (the flowing
- * script word over the anchor's base), 'sub' (smaller lines in the gold
- * lower area), 'spoken' (small caps, intro banter / whispered outro).
- * Words accumulate as sung; nothing is ever removed until the scene ends.
+ * `fig` is the plate's one photographic cutout, printed as an ink plate
+ * (grayscale + multiply, see style.css). `size` picks a bounded width
+ * tier — the figure lives in its own grid column (portrait: its own row),
+ * so it geometrically cannot collide with the text on any viewport.
  */
-export const SCENES = [
-  { id:'intro', enter:0, hue:6, warmth:0.55,
-    anchor:{ img:'vinyl.png', w:64, x:0, rot:-8, kiss:4, overlap:2 },
-    slots:[
-      { type:'spoken', line:0 },
-      { type:'spoken', line:1 },
-    ] },
-  { id:'chorus-a', enter:13.4, hue:8, warmth:0.6,
-    anchor:{ img:'gramophone.png', w:82, x:-4, rot:0, kiss:5, overlap:7 },
-    slots:[
-      { type:'headline', line:2, from:0, to:4 },   // Oh, let me call you
-      { type:'script',   line:2, from:5, to:5 },   // sweetheart
-      { type:'sub',      line:2, from:6, to:10 },  // I'm in love with you
-      { type:'sub',      line:3, from:0, to:9 },   // Let me hear you whisper that you love me too
-    ] },
-  { id:'love-light', enter:34.22, hue:12, warmth:0.65,
-    anchor:{ img:'candle.png', w:40, x:6, rot:0, kiss:5, overlap:0 },
-    slots:[
-      { type:'headline', line:4, from:0, to:3 },   // Keep the love light
-      { type:'script',   line:4, from:4, to:4 },   // glowing
-      { type:'sub',      line:4, from:5, to:9 },   // in your eyes so true
-    ] },
-  { id:'chorus-b', enter:43.32, hue:9, warmth:0.62,
-    anchor:{ img:'rotary-phone.png', w:92, x:0, rot:0, kiss:5, overlap:6 },
-    slots:[
-      { type:'headline', line:5, from:0, to:3 },   // Let me call you
-      { type:'script',   line:5, from:4, to:4 },   // sweetheart
-      { type:'sub',      line:5, from:5, to:9 },   // I'm in love with you
-    ] },
-  { id:'dreaming', enter:60.06, hue:14, warmth:0.58,
-    anchor:{ img:'dove.png', w:76, x:2, rot:0, kiss:4, overlap:0 },
-    slots:[
-      { type:'headline', line:6, from:0, to:2 },   // I am dreaming
-      { type:'script',   line:6, from:3, to:3 },   // dear
-      { type:'sub',      line:6, from:4, to:8 },   // of you day by day
-      { type:'sub',      line:7, from:0, to:8 },   // Dreaming when the skies are blue...
-    ] },
-  { id:'moonlight', enter:79.94, hue:5, warmth:0.5,
-    anchor:{ img:'pearl-necklace.png', w:82, x:0, rot:0, kiss:5, overlap:0 },
-    slots:[
-      { type:'headline', line:8, from:0, to:2 },   // When the silvery
-      { type:'script',   line:8, from:3, to:3 },   // moonlight
-      { type:'sub',      line:8, from:4, to:10 },  // gleams, still I wander on in dreams
-    ] },
-  { id:'land-of-love', enter:94.4, hue:12, warmth:0.68,
-    anchor:{ img:'typewriter.png', w:84, x:0, rot:0, kiss:5, overlap:6 },
-    slots:[
-      { type:'headline', line:9, from:0, to:3 },   // In a land of
-      { type:'script',   line:9, from:4, to:4 },   // love
-      { type:'sub',      line:9, from:5, to:6 },   // it seems
-      { type:'sub',      line:10, from:0, to:5 },  // Just with you, just with you
-    ] },
-  { id:'chorus-reprise', enter:112.02, hue:9, warmth:0.66,
-    anchor:{ img:'rose-bouquet.png', w:60, x:-2, rot:0, kiss:5, overlap:2 },
-    slots:[
-      { type:'headline', line:11, from:0, to:3 },  // Let me call you
-      { type:'script',   line:11, from:4, to:4 },  // sweetheart
-      { type:'sub',      line:11, from:5, to:9 },  // I'm in love with you
-      { type:'sub',      line:12, from:0, to:9 },  // Let me hear you whisper that you love me too
-    ] },
-  { id:'love-light-2', enter:133.12, hue:13, warmth:0.72,
-    anchor:{ img:'ring.png', w:50, x:0, rot:0, kiss:4, overlap:0 },
-    slots:[
-      { type:'headline', line:13, from:0, to:3 },  // Keep the love light
-      { type:'script',   line:13, from:4, to:4 },  // glowing
-      { type:'sub',      line:13, from:5, to:9 },  // in your eyes so true
-    ] },
-  { id:'finale', enter:143.32, hue:16, warmth:0.85,
-    anchor:{ img:'gramophone.png', w:80, x:-4, rot:0, kiss:5, overlap:7 },
-    slots:[
-      { type:'headline', line:14, from:0, to:3 },  // Let me call you
-      { type:'script',   line:14, from:4, to:4 },  // sweetheart
-      { type:'sub',      line:14, from:5, to:9 },  // I'm in love with you
-      { type:'spoken',   line:15 },                // the whispered outro tag
-    ] },
+export const PLATES = [
+  { id:'prologue', enter:0, roman:'I', section:'Prologue', cover:true,
+    spoken:[ { line:0 }, { line:1 } ] },
+  { id:'chorus', enter:13.4, roman:'II', section:'The Chorus',
+    fig:{ img:'gramophone.png', size:'lg', caption:'Gramophone' },
+    headline:{ line:2, from:0, to:4 },            // Oh, let me call you
+    kw:{ line:2, at:5 },                          // sweetheart
+    deck:[ { line:2, from:6, to:10 }, { line:3, from:0, to:9 } ] },
+  { id:'love-light', enter:34.22, roman:'III', section:'The Love Light',
+    fig:{ img:'candle.png', size:'sm', caption:'Candlelight' },
+    headline:{ line:4, from:0, to:3 },            // Keep the love light
+    kw:{ line:4, at:4 },                          // glowing
+    deck:[ { line:4, from:5, to:9 } ] },
+  { id:'chorus-b', enter:43.32, roman:'IV', section:'Chorus, again',
+    fig:{ img:'rotary-phone.png', size:'lg', caption:'Rotary telephone' },
+    headline:{ line:5, from:0, to:3 },            // Let me call you
+    kw:{ line:5, at:4 },                          // sweetheart
+    deck:[ { line:5, from:5, to:9 } ] },
+  { id:'dreaming', enter:60.06, roman:'V', section:'The Verse · Dreaming',
+    fig:{ img:'dove.png', size:'md', tone:'deep', caption:'Dove' },
+    headline:{ line:6, from:0, to:2 },            // I am dreaming
+    kw:{ line:6, at:3, kwAfter:true },            // dear
+    deck:[ { line:6, from:4, to:8 }, { line:7, from:0, to:8 } ] },
+  { id:'moonlight', enter:79.94, roman:'VI', section:'The Verse · Moonlight',
+    fig:{ img:'pearl-necklace.png', size:'lg', tone:'deep', caption:'Pearls' },
+    headline:{ line:8, from:0, to:2 },            // When the silvery
+    kw:{ line:8, at:3 },                          // moonlight
+    deck:[ { line:8, from:4, to:10 } ] },
+  { id:'land-of-love', enter:94.4, roman:'VII', section:'A Land of Love',
+    fig:{ img:'typewriter.png', size:'lg', caption:'Typewriter' },
+    headline:{ line:9, from:0, to:3 },            // In a land of
+    kw:{ line:9, at:4, kwAfter:true },            // love
+    deck:[ { line:9, from:5, to:6 }, { line:10, from:0, to:5 } ] },
+  { id:'reprise', enter:112.02, roman:'VIII', section:'The Reprise',
+    fig:{ img:'rose-bouquet.png', size:'md', caption:'Roses' },
+    headline:{ line:11, from:0, to:3 },           // Let me call you
+    kw:{ line:11, at:4 },                         // sweetheart
+    deck:[ { line:11, from:5, to:9 }, { line:12, from:0, to:9 } ] },
+  { id:'love-light-2', enter:133.12, roman:'IX', section:'The Love Light, again',
+    fig:{ img:'ring.png', size:'sm', tone:'deep', caption:'The Ring' },
+    headline:{ line:13, from:0, to:3 },           // Keep the love light
+    kw:{ line:13, at:4 },                         // glowing
+    deck:[ { line:13, from:5, to:9 } ] },
+  { id:'finale', enter:143.32, roman:'X', section:'The Finale',
+    fig:{ img:'rose.png', size:'md', tone:'lift', caption:'A single rose' },
+    headline:{ line:14, from:0, to:3 },           // Let me call you
+    kw:{ line:14, at:4 },                         // sweetheart
+    deck:[ { line:14, from:5, to:9 } ],
+    spoken:[ { line:15 } ] },                     // the whispered outro tag
 ];
 
-/** End of a scene's hold = the next scene's enter (last runs to song end). */
-export function sceneEnd(idx){
-  return idx + 1 < SCENES.length ? SCENES[idx + 1].enter : TOTAL_DURATION;
+/** End of a plate's hold = the next plate's enter (last runs to song end). */
+export function plateEnd(idx){
+  return idx + 1 < PLATES.length ? PLATES[idx + 1].enter : TOTAL_DURATION;
 }

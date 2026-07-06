@@ -3,33 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>My Sweetheart</title>
-<meta name="description" content="A 1910 love song, playing on a vintage TV. One button. Press play.">
-<meta name="theme-color" content="#a92c17">
-<link rel="preload" href="/fonts/titan-one-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/cookie-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/oswald-500.woff2" as="font" type="font/woff2" crossorigin>
+<title>Let Me Call You Sweetheart</title>
+<meta name="description" content="A 1910 love song, typeset live as a fine-press edition. One button. Press the seal.">
+<meta name="theme-color" content="#F6F3EB">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F6F3EB'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%232B3E9E' font-family='Georgia,serif' font-style='italic'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="/fonts/instrument-serif-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/schibsted-grotesk-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/fragment-mono-400.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
 
-<div id="bg"></div>
-<div id="vignette"></div>
-<div id="progress"><div id="progress-fill"></div></div>
-
 <audio id="track" src="audio/let-me-call-you-sweetheart.mp3" preload="metadata"></audio>
 
-<main id="stage">
-  <canvas id="tv-canvas"></canvas>
-</main>
+<div id="grain" aria-hidden="true"></div>
+<div id="trim" aria-hidden="true"></div>
+<i class="crop tl" aria-hidden="true"></i><i class="crop tr" aria-hidden="true"></i>
+<i class="crop bl" aria-hidden="true"></i><i class="crop br" aria-hidden="true"></i>
 
-<a id="tv-credit" href="https://sketchfab.com/3d-models/tv-old-tv-retro-tv-f13b9a45c0d649dc90ebac5f7717cebf" target="_blank" rel="noopener">TV model by fan7774 (CC BY-NC)</a>
+<div id="frame">
+  <header id="mast">
+    <span class="name">Let Me Call You Sweetheart</span>
+    <span class="meta">
+      <span id="meta-credits">FRIEDMAN &amp; WHITSON · <b>EST. 1910</b></span>
+      <span id="meta-caption"></span>
+    </span>
+  </header>
 
-<button id="play-btn" aria-label="Play">
-  <span class="icon-wrap">
-    <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-    <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-  </span>
-</button>
+  <main id="edition">
+    <!-- Plate I / the cover is static so the page composes before JS runs;
+         the remaining plates and the colophon are built by src/main.js
+         from the PLATES data. -->
+    <section class="plate cover on" id="plate-0" data-plate="0">
+      <div class="cover-c">
+        <span class="eyebrow rise r1">A love letter, typeset live</span>
+        <h1 class="sr-only">Let me call you Sweetheart</h1>
+        <div class="t1"><span class="rev"><span class="rise r2">Let me call you</span></span></div>
+        <div class="t2"><span class="rev"><span class="rise r3">Sweetheart</span></span><svg class="swash" viewBox="0 0 300 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M4 15 C 70 5, 170 21, 296 9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg></div>
+        <span class="cred rise r4">A waltz from 1910 · sung by The Jubileers, 1924</span>
+        <span class="stand rise r4" id="cover-stand"></span>
+        <div class="banter" id="cover-banter"></div>
+        <button class="seal seal-lg rise r5" id="seal-cover" aria-label="Play the song">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <span class="hint rise r5" aria-hidden="true">Press the seal to play</span>
+      </div>
+    </section>
+
+    <section class="plate colophon" id="colophon">
+      <div class="col-c">
+        <span class="fleuron" aria-hidden="true">❦</span>
+        <p class="big">I’m in love with you.</p>
+        <span class="love">Made with love by Naveen</span>
+        <p class="colo">SET LIVE IN INSTRUMENT SERIF &amp; SCHIBSTED GROTESK<br>
+          SUNG BY THE JUBILEERS · 1924<br>
+          EVERY WORD PLACED AT ITS SUNG SECOND · PRINTED IN YOUR BROWSER</p>
+        <button class="seal seal-lg" id="seal-replay" aria-label="Play it again">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer id="base">
+    <button class="seal seal-sm" id="seal-dock" aria-label="Pause or resume">
+      <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+    </button>
+    <span class="tc"><b id="tc-now">00:00</b>&nbsp;/&nbsp;<span id="tc-total">02:59</span></span>
+    <span class="rule"><i id="rule-fill"></i></span>
+    <span class="folio" id="folio">COVER · X PLATES</span>
+  </footer>
+</div>
 
 <script type="module" src="/src/main.js"></script>
 </body>
